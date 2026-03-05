@@ -1,0 +1,19 @@
+{
+  "name": "@mahfuz/gamification",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mahfuz/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@mahfuz/typescript-config": "workspace:*",
+    "typescript": "^5.7.3"
+  }
+}

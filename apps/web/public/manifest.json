@@ -1,0 +1,29 @@
+{
+  "name": "Mahfuz — Kuran-ı Kerim",
+  "short_name": "Mahfuz",
+  "description": "Kuran-ı Kerim'i okuyun, dinleyin, ezberleyin.",
+  "start_url": "/surah",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#059669",
+  "orientation": "portrait-primary",
+  "lang": "tr",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

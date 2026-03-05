@@ -1,0 +1,504 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #ecfdf5;
+  --color-primary-100: #d1fae5;
+  --color-primary-200: #a7f3d0;
+  --color-primary-300: #6ee7b7;
+  --color-primary-400: #34d399;
+  --color-primary-500: #10b981;
+  --color-primary-600: #059669;
+  --color-primary-700: #047857;
+  --color-primary-800: #065f46;
+  --color-primary-900: #064e3b;
+  --color-primary-950: #022c22;
+
+  --color-gold-50: #fffbeb;
+  --color-gold-100: #fef3c7;
+  --color-gold-200: #fde68a;
+  --color-gold-300: #fcd34d;
+  --color-gold-400: #fbbf24;
+  --color-gold-500: #f59e0b;
+  --color-gold-600: #d97706;
+  --color-gold-700: #b45309;
+  --color-gold-800: #92400e;
+  --color-gold-900: #78350f;
+
+  /* Apple's exact color tokens */
+  --color-apple-black: #1d1d1f;
+  --color-apple-gray: #6e6e73;
+  --color-apple-gray2: #86868b;
+  --color-apple-gray3: #aeaeb2;
+  --color-apple-bg: #f5f5f7;
+  --color-apple-divider: #d2d2d7;
+
+  --color-surface: #f5f5f7;
+  --color-surface-raised: #ffffff;
+  --color-border: rgba(0, 0, 0, 0.06);
+  --color-border-light: rgba(0, 0, 0, 0.04);
+
+  --font-arabic: "KFGQPC Uthmani Hafs", "Scheherazade New", "Traditional Arabic", serif;
+  --font-sans: "Inter", "SF Pro Display", "SF Pro Text", -apple-system, system-ui, sans-serif;
+
+  /* Apple depth system */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-elevated: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --shadow-float: 0 8px 30px rgba(0, 0, 0, 0.12);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* === Theme semantic tokens === */
+:root,
+[data-theme="light"] {
+  --theme-bg: #f5f5f7;
+  --theme-bg-primary: #ffffff;
+  --theme-bg-elevated: #ffffff;
+  --theme-text: #1d1d1f;
+  --theme-text-secondary: #6e6e73;
+  --theme-text-tertiary: #86868b;
+  --theme-text-quaternary: #aeaeb2;
+  --theme-border: rgba(0, 0, 0, 0.06);
+  --theme-divider: #d2d2d7;
+  --theme-pill-bg: #f5f5f7;
+  --theme-glass-bg: rgba(255, 255, 255, 0.8);
+  --theme-glass-heavy-bg: rgba(255, 255, 255, 0.92);
+  --theme-verse-number-bg: #f5f5f7;
+  --theme-translation-accent: rgba(5, 150, 105, 0.2);
+  --theme-hover-bg: rgba(255, 255, 255, 0.6);
+  --theme-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
+  --theme-meta-color: #059669;
+  --theme-scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --theme-scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+  --theme-input-bg: #f5f5f7;
+  --theme-speed-inactive-bg: #f5f5f7;
+  --theme-speed-inactive-hover: #e8e8ea;
+  --theme-surah-header-glow: rgba(255, 255, 255, 0.85);
+}
+
+[data-theme="sepia"] {
+  --theme-bg: #f5ead6;
+  --theme-bg-primary: #faf4e8;
+  --theme-bg-elevated: #fdf8f0;
+  --theme-text: #4a3728;
+  --theme-text-secondary: #7a6652;
+  --theme-text-tertiary: #96836e;
+  --theme-text-quaternary: #b5a48f;
+  --theme-border: rgba(74, 55, 40, 0.1);
+  --theme-divider: rgba(74, 55, 40, 0.15);
+  --theme-pill-bg: rgba(74, 55, 40, 0.06);
+  --theme-glass-bg: rgba(250, 244, 232, 0.85);
+  --theme-glass-heavy-bg: rgba(250, 244, 232, 0.95);
+  --theme-verse-number-bg: rgba(74, 55, 40, 0.06);
+  --theme-translation-accent: rgba(160, 120, 60, 0.25);
+  --theme-hover-bg: rgba(253, 248, 240, 0.6);
+  --theme-card-shadow: 0 1px 3px rgba(74, 55, 40, 0.06);
+
+  --theme-meta-color: #8b7332;
+  --theme-scrollbar-thumb: rgba(74, 55, 40, 0.15);
+  --theme-scrollbar-thumb-hover: rgba(74, 55, 40, 0.25);
+  --theme-input-bg: rgba(74, 55, 40, 0.06);
+  --theme-speed-inactive-bg: rgba(74, 55, 40, 0.06);
+  --theme-speed-inactive-hover: rgba(74, 55, 40, 0.12);
+  --theme-surah-header-glow: rgba(250, 244, 232, 0.85);
+}
+
+[data-theme="dark"] {
+  --theme-bg: #1a1a1a;
+  --theme-bg-primary: #2a2a2a;
+  --theme-bg-elevated: #333333;
+  --theme-text: #e5e5e5;
+  --theme-text-secondary: #a0a0a0;
+  --theme-text-tertiary: #808080;
+  --theme-text-quaternary: #666666;
+  --theme-border: rgba(255, 255, 255, 0.08);
+  --theme-divider: rgba(255, 255, 255, 0.1);
+  --theme-pill-bg: rgba(255, 255, 255, 0.06);
+  --theme-glass-bg: rgba(30, 30, 30, 0.85);
+  --theme-glass-heavy-bg: rgba(30, 30, 30, 0.95);
+  --theme-verse-number-bg: rgba(255, 255, 255, 0.06);
+  --theme-translation-accent: rgba(52, 211, 153, 0.2);
+  --theme-hover-bg: rgba(255, 255, 255, 0.04);
+  --theme-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+  --theme-meta-color: #34d399;
+  --theme-scrollbar-thumb: rgba(255, 255, 255, 0.15);
+  --theme-scrollbar-thumb-hover: rgba(255, 255, 255, 0.25);
+  --theme-input-bg: rgba(255, 255, 255, 0.06);
+  --theme-speed-inactive-bg: rgba(255, 255, 255, 0.06);
+  --theme-speed-inactive-hover: rgba(255, 255, 255, 0.12);
+  --theme-surah-header-glow: rgba(26, 26, 26, 0.85);
+}
+
+@font-face {
+  font-family: "KFGQPC Uthmani Hafs";
+  src: url("/fonts/KFGQPCUthmanicScriptHAFS.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Base */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--theme-bg);
+  color: var(--theme-text);
+  letter-spacing: -0.01em;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Glass surfaces — Apple vibrancy */
+.glass {
+  background: var(--theme-glass-bg);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+.glass-heavy {
+  background: var(--theme-glass-heavy-bg);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+.glass-dark {
+  background: rgba(29, 29, 31, 0.82);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* Arabic text */
+[dir="rtl"],
+.arabic-text {
+  direction: rtl;
+  font-family: var(--font-arabic);
+  font-size: calc(1em * var(--arabic-font-scale, 1));
+  line-height: 2.2;
+  letter-spacing: 0;
+  word-spacing: 4px;
+}
+
+/* Translation/transliteration text scale */
+.translation-text {
+  font-size: calc(1em * var(--translation-font-scale, 1));
+}
+
+/* ═══ Mushaf — Ottoman Imperial Tezhip (Karahisari Style) ═══ */
+
+/* Mushaf palette tokens — per theme */
+:root, [data-theme="light"] {
+  --mushaf-paper: #faf5ea;
+  --mushaf-ink: #2c1810;
+  --mushaf-gold: #c9a55a;
+  --mushaf-gold-dark: #8a6510;
+  --mushaf-gold-light: #e6d49e;
+  --mushaf-gold-shine: #f0e4c0;
+  --mushaf-lapis: #1b3a6b;
+  --mushaf-lapis-light: #2a4f8a;
+  --mushaf-vermilion: #a83028;
+  --mushaf-shadow: 0 12px 48px rgba(60, 40, 10, 0.14), 0 2px 8px rgba(0,0,0,0.06);
+}
+[data-theme="sepia"] {
+  --mushaf-paper: #efe3ca;
+  --mushaf-ink: #3e2c1a;
+  --mushaf-gold: #b8923e;
+  --mushaf-gold-dark: #7a5a0e;
+  --mushaf-gold-light: #d4be80;
+  --mushaf-gold-shine: #e0d0a0;
+  --mushaf-lapis: #1a345a;
+  --mushaf-lapis-light: #264878;
+  --mushaf-vermilion: #8e2820;
+  --mushaf-shadow: 0 12px 48px rgba(40, 28, 8, 0.18), 0 2px 8px rgba(0,0,0,0.08);
+}
+[data-theme="dark"] {
+  --mushaf-paper: #262018;
+  --mushaf-ink: #d4c8a8;
+  --mushaf-gold: #9a7828;
+  --mushaf-gold-dark: #6a5018;
+  --mushaf-gold-light: #b89840;
+  --mushaf-gold-shine: #c4a850;
+  --mushaf-lapis: #12284a;
+  --mushaf-lapis-light: #1a3660;
+  --mushaf-vermilion: #7a2420;
+  --mushaf-shadow: 0 12px 48px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.25);
+}
+
+/* ── Page container ── */
+.mushaf-page {
+  max-width: 640px;
+  margin: 0 auto;
+  border-radius: 3px;
+  box-shadow: var(--mushaf-shadow);
+  /* Outermost gold edge */
+  background: linear-gradient(
+    145deg,
+    var(--mushaf-gold-light),
+    var(--mushaf-gold) 30%,
+    var(--mushaf-gold-dark) 50%,
+    var(--mushaf-gold) 70%,
+    var(--mushaf-gold-light)
+  );
+  padding: 3px;
+}
+
+/* ── Outer cetvel — triple gold ruling ── */
+.mushaf-cetvel-outer {
+  border: 1px solid var(--mushaf-gold-dark);
+  background: var(--mushaf-gold);
+  padding: 1.5px;
+  box-shadow: inset 0 0 0 1px var(--mushaf-gold-shine);
+}
+
+/* ── Tezhip band — lapis lazuli illumination border ── */
+.mushaf-tezhip-band {
+  position: relative;
+  padding: 16px;
+  background: var(--mushaf-lapis);
+  border: 1.5px solid var(--mushaf-gold);
+  box-shadow:
+    inset 0 0 12px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px var(--mushaf-gold-dark);
+  overflow: hidden;
+}
+@media (min-width: 640px) {
+  .mushaf-tezhip-band { padding: 22px; }
+}
+
+/* ── Hatayi floral pattern — CSS arabesque on lapis ── */
+.mushaf-hatayi-pattern {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  background-image:
+    /* Diamond lattice */
+    repeating-linear-gradient(
+      60deg,
+      transparent,
+      transparent 6px,
+      var(--mushaf-gold-light) 6px,
+      var(--mushaf-gold-light) 7px
+    ),
+    repeating-linear-gradient(
+      -60deg,
+      transparent,
+      transparent 6px,
+      var(--mushaf-gold-light) 6px,
+      var(--mushaf-gold-light) 7px
+    ),
+    /* Cross-hatch fill */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 12px,
+      var(--mushaf-gold) 12px,
+      var(--mushaf-gold) 12.5px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 12px,
+      var(--mushaf-gold) 12px,
+      var(--mushaf-gold) 12.5px
+    );
+}
+
+/* Faint inner glow along tezhip band edges */
+.mushaf-tezhip-band::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border: 1px solid var(--mushaf-gold);
+  opacity: 0.25;
+  pointer-events: none;
+}
+.mushaf-tezhip-band::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 0.5px solid var(--mushaf-gold-light);
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+/* ── Köşelik — corner ornament SVG ── */
+.mushaf-koselik {
+  width: 56px;
+  height: 56px;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 0 2px rgba(201, 165, 90, 0.3));
+}
+@media (min-width: 640px) {
+  .mushaf-koselik { width: 64px; height: 64px; }
+}
+
+/* ── Inner cetvel — double gold ruling around text ── */
+.mushaf-cetvel-inner {
+  position: relative;
+  background: var(--mushaf-paper);
+  border: 2px solid var(--mushaf-gold);
+  /* Double-line effect via inset box-shadow */
+  box-shadow:
+    inset 0 0 0 4px var(--mushaf-paper),
+    inset 0 0 0 5px var(--mushaf-gold-light),
+    0 0 8px rgba(0, 0, 0, 0.08);
+  min-height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Content area ── */
+.mushaf-content {
+  width: 100%;
+  padding: 1.25rem 1.25rem;
+}
+@media (min-width: 640px) {
+  .mushaf-content { padding: 2rem 2.5rem; }
+}
+
+/* ── Durak — verse-end marker (Ottoman rosette style) ── */
+.mushaf-durak {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin: 0 4px;
+  vertical-align: middle;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mushaf-gold-dark);
+  background:
+    radial-gradient(circle, var(--mushaf-gold-shine) 0%, transparent 70%);
+  border: 1.5px solid var(--mushaf-gold);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px var(--mushaf-paper),
+    0 0 0 3px var(--mushaf-gold-light),
+    0 0 6px rgba(201, 165, 90, 0.2);
+}
+
+/* Word highlight for audio sync */
+.word-highlight {
+  transition: color 200ms ease, background-color 200ms ease, transform 150ms ease;
+  border-radius: 6px;
+  padding: 2px 4px;
+}
+.word-highlight:hover {
+  color: var(--color-primary-700);
+}
+.word-highlight.active {
+  color: var(--color-primary-700);
+  background-color: var(--color-primary-100);
+  transform: scale(1.02);
+}
+
+/* Verse separator ornament */
+.verse-end {
+  font-family: var(--font-arabic);
+  color: var(--color-gold-500);
+}
+
+/* Smooth scrollbar — Apple style */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--theme-scrollbar-thumb); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--theme-scrollbar-thumb-hover); }
+
+/* Animations — Apple spring-like */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-scale-in {
+  animation: scale-in 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Audio bar slide-up animation */
+@keyframes audio-bar-in {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.audio-bar-in {
+  animation: audio-bar-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Audio progress track — clickable area */
+.audio-progress-track {
+  position: relative;
+}
+
+/* Speed button active state */
+.speed-btn-active {
+  box-shadow: 0 1px 4px rgba(5, 150, 105, 0.3);
+}
+
+/* Volume slider thumb */
+.audio-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-primary-600);
+  cursor: pointer;
+  border: none;
+}
+.audio-volume-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-primary-600);
+  cursor: pointer;
+  border: none;
+}
+
+/* Focus ring — Apple style */
+:focus-visible {
+  outline: 4px solid rgba(5, 150, 105, 0.4);
+  outline-offset: 1px;
+  border-radius: 12px;
+}
+
+/* Reading toolbar popover animation */
+@keyframes toolbar-in {
+  from { opacity: 0; transform: scale(0.92) translateY(-4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-toolbar-in {
+  animation: toolbar-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+}
+
+/* Tap-to-reveal fade animation */
+@keyframes reveal-fade {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 200px; }
+}
+.animate-reveal {
+  animation: reveal-fade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  overflow: hidden;
+}

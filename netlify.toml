@@ -1,7 +1,7 @@
 [build]
-  base = "."
-  command = "cd apps/web && pnpm build && mkdir -p ../../.netlify/v1/functions && sed 's|../../../dist/server|../../../apps/web/dist/server|' .netlify/v1/functions/server.mjs > ../../.netlify/v1/functions/server.mjs"
-  publish = "apps/web/dist/client"
+  base = "apps/web"
+  command = "pnpm build"
+  publish = "dist/client"
 
 [build.environment]
   NODE_VERSION = "22"

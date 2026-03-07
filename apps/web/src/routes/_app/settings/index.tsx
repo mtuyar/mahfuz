@@ -295,8 +295,8 @@ function NormalTabContent({
 }) {
   const fontStyle = {
     fontFamily: `${fontFamily}, "Traditional Arabic", serif`,
-    fontSize: `calc(1.4rem * ${arabicFontSize})`,
-    lineHeight: 2.4,
+    fontSize: `calc(1.65rem * ${arabicFontSize})`,
+    lineHeight: 2.6,
   };
 
   const renderWord = (text: string, i: number) => (
@@ -318,7 +318,7 @@ function NormalTabContent({
         </p>
         <p
           className="mt-2 font-sans text-[var(--theme-text-secondary)]"
-          style={{ fontSize: `calc(0.9375rem * ${translationFontSize})`, lineHeight: 1.8 }}
+          style={{ fontSize: `calc(15px * ${translationFontSize})`, lineHeight: 1.8 }}
         >
           {SAMPLE_TRANSLATION}
         </p>
@@ -333,7 +333,7 @@ function NormalTabContent({
         <div className="mt-2 flex items-center gap-3">
           <span className="arabic-text text-sm text-[var(--theme-text-tertiary)]">ع</span>
           <input
-            type="range" min="0.8" max="1.5" step="0.05"
+            type="range" min="0.6" max="2.0" step="0.05"
             value={arabicFontSize}
             onChange={(e) => onArabicSizeChange(Number(e.target.value))}
             className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-[var(--theme-border)] accent-primary-600"
@@ -351,7 +351,7 @@ function NormalTabContent({
         <div className="mt-2 flex items-center gap-3">
           <span className="text-xs text-[var(--theme-text-tertiary)]">A</span>
           <input
-            type="range" min="0.8" max="1.5" step="0.05"
+            type="range" min="0.6" max="2.0" step="0.05"
             value={translationFontSize}
             onChange={(e) => onTranslationSizeChange(Number(e.target.value))}
             className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-[var(--theme-border)] accent-primary-600"
@@ -404,7 +404,7 @@ function WbwTabContent({
                 dir="rtl"
                 style={{
                   fontFamily: `${fontFamily}, "Traditional Arabic", serif`,
-                  fontSize: `calc(1.25rem * ${arabicFontSize})`,
+                  fontSize: `calc(1.5rem * ${arabicFontSize})`,
                   color: colorizeWords
                     ? colors[i % colors.length]
                     : "var(--theme-text)",
@@ -415,7 +415,7 @@ function WbwTabContent({
               {showWordTranslation && (
                 <span
                   className="font-sans text-[var(--theme-text-tertiary)]"
-                  style={{ fontSize: `calc(10px * ${wordTranslationSize})` }}
+                  style={{ fontSize: `calc(11px * ${wordTranslationSize})` }}
                 >
                   {SAMPLE_WORD_TRANSLATIONS[i]}
                 </span>
@@ -423,7 +423,7 @@ function WbwTabContent({
               {showWordTransliteration && (
                 <span
                   className="font-sans text-[var(--theme-text-quaternary)]"
-                  style={{ fontSize: `calc(9px * ${wordTransliterationSize})` }}
+                  style={{ fontSize: `calc(10px * ${wordTransliterationSize})` }}
                 >
                   {SAMPLE_WORD_TRANSLITERATIONS[i]}
                 </span>
@@ -442,7 +442,7 @@ function WbwTabContent({
         <div className="mt-2 flex items-center gap-3">
           <span className="arabic-text text-sm text-[var(--theme-text-tertiary)]">ع</span>
           <input
-            type="range" min="0.8" max="1.5" step="0.05"
+            type="range" min="0.6" max="2.0" step="0.05"
             value={arabicFontSize}
             onChange={(e) => onArabicSizeChange(Number(e.target.value))}
             className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-[var(--theme-border)] accent-primary-600"
@@ -461,7 +461,7 @@ function WbwTabContent({
           <div className="mt-3 flex items-center gap-3">
             <span className="shrink-0 text-[12px] text-[var(--theme-text-tertiary)]">Çeviri Boyutu</span>
             <input
-              type="range" min="0.8" max="1.5" step="0.05"
+              type="range" min="0.6" max="2.0" step="0.05"
               value={wordTranslationSize}
               onChange={(e) => onWordTranslationSizeChange(Number(e.target.value))}
               className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-[var(--theme-border)] accent-primary-600"
@@ -483,7 +483,7 @@ function WbwTabContent({
           <div className="mt-3 flex items-center gap-3">
             <span className="shrink-0 text-[12px] text-[var(--theme-text-tertiary)]">Okunuş Boyutu</span>
             <input
-              type="range" min="0.8" max="1.5" step="0.05"
+              type="range" min="0.6" max="2.0" step="0.05"
               value={wordTransliterationSize}
               onChange={(e) => onWordTransliterationSizeChange(Number(e.target.value))}
               className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-[var(--theme-border)] accent-primary-600"
@@ -513,8 +513,8 @@ function MushafTabContent({
 }) {
   const fontStyle = {
     fontFamily: `${fontFamily}, "Traditional Arabic", serif`,
-    fontSize: `calc(1.4rem * ${arabicFontSize})`,
-    lineHeight: 2.4,
+    fontSize: `calc(1.65rem * ${arabicFontSize})`,
+    lineHeight: 2.8,
   };
 
   const renderWord = (text: string, i: number) => (
@@ -554,7 +554,7 @@ function MushafTabContent({
         <div className="mt-2 flex items-center gap-3">
           <span className="arabic-text text-sm text-[var(--theme-text-tertiary)]">ع</span>
           <input
-            type="range" min="0.8" max="1.5" step="0.05"
+            type="range" min="0.6" max="2.0" step="0.05"
             value={arabicFontSize}
             onChange={(e) => onArabicSizeChange(Number(e.target.value))}
             className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-[var(--theme-border)] accent-primary-600"

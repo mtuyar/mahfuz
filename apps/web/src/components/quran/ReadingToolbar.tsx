@@ -1,18 +1,28 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { usePreferencesStore, getArabicFontSizeForMode, getTranslationFontSizeForMode, COLOR_PALETTES } from "~/stores/usePreferencesStore";
+import { useQuery } from "@tanstack/react-query";
+import { usePreferencesStore, getTranslationFontSizeForMode, getArabicFontSizeForMode, COLOR_PALETTES, ARABIC_FONTS, getActiveColors } from "~/stores/usePreferencesStore";
 import type { Theme, ViewMode, ColorPaletteId } from "~/stores/usePreferencesStore";
-
-const VIEW_MODE_LABELS: Record<ViewMode, string> = {
-  normal: "Normal",
-  wordByWord: "Kelime",
-  mushaf: "Mushaf",
-};
+import type { Verse } from "@mahfuz/shared/types";
+import { SegmentedControl } from "~/components/ui/SegmentedControl";
+import { verseByKeyQueryOptions } from "~/hooks/useVerses";
 
 const THEMES: { value: Theme; label: string; color: string; border: string }[] = [
   { value: "light", label: "Açık", color: "#ffffff", border: "#d2d2d7" },
   { value: "sepia", label: "Sepia", color: "#f5ead6", border: "#d4b882" },
   { value: "dark", label: "Koyu", color: "#1a1a1a", border: "#444" },
 ];
+
+type ToolbarTab = "boyut" | "tema" | "font";
+
+const TOOLBAR_TABS: { value: ToolbarTab; label: string }[] = [
+  { value: "boyut", label: "Boyut" },
+  { value: "tema", label: "Tema" },
+  { value: "font", label: "Yazı Tipi" },
+];
+
+const BISMILLAH_SAMPLE = "بِسْمِ ٱللَّهِ";
+
+/* ─── Shared helpers ─── */
 
 function SizeSlider({
   label,
@@ -30,60 +40,32 @@ function SizeSlider({
   return (
     <div className="mb-4">
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-[12px] font-medium text-[var(--theme-text-tertiary)]">
-          {label}
-        </span>
-        <span className="text-[11px] tabular-nums text-[var(--theme-text-quaternary)]">
-          %{Math.round(value * 100)}
-        </span>
+        <span className="text-[12px] font-medium text-[var(--theme-text-tertiary)]">{label}</span>
+        <span className="text-[11px] tabular-nums text-[var(--theme-text-quaternary)]">%{Math.round(value * 100)}</span>
       </div>
       <div className="flex items-center gap-3">
         <span className="flex w-5 shrink-0 items-center justify-center">{smallIcon}</span>
-        <input
-          type="range"
-          min="0.6"
-          max="2.0"
-          step="0.05"
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-[var(--theme-border)] accent-primary-600"
-        />
+        <input type="range" min="0.6" max="2.0" step="0.05" value={value} onChange={(e) => onChange(Number(e.target.value))} className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-[var(--theme-border)] accent-primary-600" />
         <span className="flex w-5 shrink-0 items-center justify-center">{largeIcon}</span>
       </div>
     </div>
   );
 }
 
-function ToggleRow({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
+function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <div className="mb-3 flex items-center justify-between">
-      <span className="text-[13px] font-medium text-[var(--theme-text)]">
-        {label}
-      </span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        onClick={() => onChange(!checked)}
-        className={`relative h-[26px] w-[44px] shrink-0 rounded-full transition-colors ${
-          checked ? "bg-primary-600" : "bg-[var(--theme-divider)]"
-        }`}
-      >
-        <span
-          className={`absolute top-[2px] left-[2px] h-[22px] w-[22px] rounded-full bg-white shadow-sm transition-transform ${
-            checked ? "translate-x-[18px]" : "translate-x-0"
-          }`}
-        />
-      </button>
+      <span className="text-[13px] font-medium text-[var(--theme-text)]">{label}</span>
+      <ToggleSwitch checked={checked} onChange={onChange} />
     </div>
+  );
+}
+
+function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className={`relative h-[26px] w-[44px] shrink-0 rounded-full transition-colors ${checked ? "bg-primary-600" : "bg-[var(--theme-divider)]"}`}>
+      <span className={`absolute top-[2px] left-[2px] h-[22px] w-[22px] rounded-full bg-white shadow-sm transition-transform ${checked ? "translate-x-[18px]" : "translate-x-0"}`} />
+    </button>
   );
 }
 
@@ -91,13 +73,277 @@ function Divider() {
   return <div className="my-3 border-t border-[var(--theme-divider)]" />;
 }
 
+/* ─── Live Preview ─── */
+
+function PreviewCard({ verse }: { verse: Verse }) {
+  const viewMode = usePreferencesStore((s) => s.viewMode);
+  const showTranslation = usePreferencesStore((s) => s.showTranslation);
+  const colorizeWords = usePreferencesStore((s) => s.colorizeWords);
+  const colorPaletteId = usePreferencesStore((s) => s.colorPaletteId);
+  const colors = getActiveColors({ colorPaletteId });
+  const showWordTranslation = usePreferencesStore((s) => s.showWordTranslation);
+  const showWordTransliteration = usePreferencesStore((s) => s.showWordTransliteration);
+  const wbwTransliterationFirst = usePreferencesStore((s) => s.wbwTransliterationFirst);
+  const wordTranslationSize = usePreferencesStore((s) => s.wordTranslationSize);
+  const wordTransliterationSize = usePreferencesStore((s) => s.wordTransliterationSize);
+  const normalArabicFontSize = usePreferencesStore((s) => s.normalArabicFontSize);
+  const wbwArabicFontSize = usePreferencesStore((s) => s.wbwArabicFontSize);
+  const mushafArabicFontSize = usePreferencesStore((s) => s.mushafArabicFontSize);
+  const normalTranslationFontSize = usePreferencesStore((s) => s.normalTranslationFontSize);
+
+  const arabicScale = getArabicFontSizeForMode({ viewMode, normalArabicFontSize, wbwArabicFontSize, mushafArabicFontSize });
+  const translationScale = getTranslationFontSizeForMode({ viewMode, normalTranslationFontSize });
+
+  const wordItems = verse.words?.filter((w) => w.char_type_name === "word") || [];
+  const colorOf = (i: number) => (colorizeWords && colors.length > 0 ? colors[i % colors.length] : undefined);
+
+  // Preview base sizes — must match actual rendering components
+  const arabicPx = 26.4 * arabicScale;  // 1.65rem (AyahText.tsx)
+  const wbwArabicPx = 24 * arabicScale;  // 1.5rem (WordByWord.tsx)
+  const translationPx = 15 * translationScale;  // 15px (AyahText.tsx)
+
+  if (viewMode === "wordByWord") {
+    return (
+      <div className="mb-4 overflow-hidden rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-primary)] p-3">
+        <div dir="rtl" className="flex flex-wrap justify-end gap-x-3 gap-y-2">
+          {wordItems.map((word, i) => {
+            const trEl = showWordTranslation && (
+              <span key="tr" className="font-sans text-[var(--theme-text-tertiary)]" style={{ fontSize: `calc(11px * ${wordTranslationSize})`, color: colorOf(i) }}>
+                {word.translation?.text}
+              </span>
+            );
+            const tlEl = showWordTransliteration && (
+              <span key="tl" className="font-sans text-[var(--theme-text-quaternary)]" style={{ fontSize: `calc(10px * ${wordTransliterationSize})`, color: colorOf(i), opacity: colorizeWords ? 0.75 : undefined }}>
+                {word.transliteration?.text}
+              </span>
+            );
+            return (
+              <div key={word.id} className="flex flex-col items-center gap-0.5 rounded-lg px-1.5 py-1">
+                <span className="arabic-text" style={{ fontSize: `${wbwArabicPx}px`, color: colorOf(i) }}>
+                  {word.text_uthmani}
+                </span>
+                {wbwTransliterationFirst ? <>{tlEl}{trEl}</> : <>{trEl}{tlEl}</>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-4 overflow-hidden rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-primary)] p-3">
+      <p dir="rtl" className="arabic-text leading-[2.2] text-[var(--theme-text)]" style={{ fontSize: `${arabicPx}px` }}>
+        {wordItems.map((w, i) => (
+          <span key={w.id} style={{ color: colorOf(i) }}>{w.text_uthmani}{" "}</span>
+        ))}
+      </p>
+      {viewMode === "normal" && showTranslation && verse.translations?.[0] && (
+        <p className="mt-2 border-l-2 border-[var(--theme-translation-accent)] pl-2.5 leading-[1.7] text-[var(--theme-text-secondary)]" style={{ fontSize: `${translationPx}px` }} dangerouslySetInnerHTML={{ __html: verse.translations[0].text }} />
+      )}
+    </div>
+  );
+}
+
+/* ─── Mode selector options ─── */
+
+const INNER_MODE_OPTIONS: { value: ViewMode; label: string; icon: React.ReactNode }[] = [
+  {
+    value: "normal", label: "Normal",
+    icon: <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M3 4h10M3 8h7M3 12h10" /></svg>,
+  },
+  {
+    value: "wordByWord", label: "Kelime",
+    icon: <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="1.5" y="3" width="4" height="4.5" rx="1" /><rect x="7.5" y="3" width="4" height="4.5" rx="1" /><rect x="1.5" y="9.5" width="4" height="4.5" rx="1" /><rect x="7.5" y="9.5" width="4" height="4.5" rx="1" /></svg>,
+  },
+  {
+    value: "mushaf", label: "Mushaf",
+    icon: <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 2.5h4.5a1.5 1.5 0 0 1 1.5 1.5v10S6.5 13 4.25 13 2 14 2 14V2.5z" /><path d="M14 2.5H9.5A1.5 1.5 0 0 0 8 4v10s1.5-1 3.75-1S14 14 14 14V2.5z" /></svg>,
+  },
+];
+
+/* ─── iOS-style setting card ─── */
+
+function SettingCard({ icon, iconBg, label, subtitle, checked, onChange, children }: {
+  icon: React.ReactNode; iconBg: string; label: string; subtitle: string;
+  checked: boolean; onChange: (v: boolean) => void; children?: React.ReactNode;
+}) {
+  return (
+    <div className="mb-2 rounded-xl bg-[var(--theme-pill-bg)] px-3 py-2.5">
+      <div className="flex items-center gap-2.5">
+        <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white ${iconBg}`}>{icon}</div>
+        <div className="min-w-0 flex-1">
+          <span className="block text-[13px] font-medium leading-snug text-[var(--theme-text)]">{label}</span>
+          <span className="block text-[11px] leading-snug text-[var(--theme-text-quaternary)]">{subtitle}</span>
+        </div>
+        <ToggleSwitch checked={checked} onChange={onChange} />
+      </div>
+      {checked && children && (
+        <div className="mt-2 border-t border-[var(--theme-divider)] pt-2 pl-[38px]">{children}</div>
+      )}
+    </div>
+  );
+}
+
+function CompactSlider({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[12px] text-[var(--theme-text-tertiary)]">A</span>
+      <input type="range" min="0.6" max="2.0" step="0.05" value={value} onChange={(e) => onChange(Number(e.target.value))} className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-[var(--theme-border)] accent-primary-600" />
+      <span className="text-[18px] leading-none text-[var(--theme-text-tertiary)]">A</span>
+      <span className="w-8 text-right text-[10px] tabular-nums text-[var(--theme-text-quaternary)]">%{Math.round(value * 100)}</span>
+    </div>
+  );
+}
+
+/* ─── Tab: Boyut ─── */
+
+function ModeTabContent({ viewMode, setViewMode, normalArabicFontSize, setNormalArabicFontSize, wbwArabicFontSize, setWbwArabicFontSize, mushafArabicFontSize, setMushafArabicFontSize, translationFontSize, setNormalTranslationFontSize, showTranslation, setShowTranslation, showWordTranslation, setShowWordTranslation, wordTranslationSize, setWordTranslationSize, showWordTransliteration, setShowWordTransliteration, wordTransliterationSize, setWordTransliterationSize, wbwTransliterationFirst, setWbwTransliterationFirst }: {
+  viewMode: ViewMode; setViewMode: (m: ViewMode) => void;
+  normalArabicFontSize: number; setNormalArabicFontSize: (s: number) => void;
+  wbwArabicFontSize: number; setWbwArabicFontSize: (s: number) => void;
+  mushafArabicFontSize: number; setMushafArabicFontSize: (s: number) => void;
+  translationFontSize: number; setNormalTranslationFontSize: (s: number) => void;
+  showTranslation: boolean; setShowTranslation: (v: boolean) => void;
+  showWordTranslation: boolean; setShowWordTranslation: (v: boolean) => void;
+  wordTranslationSize: number; setWordTranslationSize: (s: number) => void;
+  showWordTransliteration: boolean; setShowWordTransliteration: (v: boolean) => void;
+  wordTransliterationSize: number; setWordTransliterationSize: (s: number) => void;
+  wbwTransliterationFirst: boolean; setWbwTransliterationFirst: (v: boolean) => void;
+}) {
+  const arabicSize = viewMode === "wordByWord" ? wbwArabicFontSize : viewMode === "mushaf" ? mushafArabicFontSize : normalArabicFontSize;
+  const setArabicSize = viewMode === "wordByWord" ? setWbwArabicFontSize : viewMode === "mushaf" ? setMushafArabicFontSize : setNormalArabicFontSize;
+
+  return (
+    <>
+      <div className="mb-4">
+        <SegmentedControl options={INNER_MODE_OPTIONS} value={viewMode} onChange={setViewMode} stretch />
+      </div>
+
+      <SizeSlider label="Arapça Boyutu" value={arabicSize} onChange={setArabicSize}
+        smallIcon={<span className="-translate-y-[4px] text-[15px] leading-none text-[var(--theme-text-tertiary)]" style={{ fontFamily: 'var(--font-arabic)' }}>ع</span>}
+        largeIcon={<span className="-translate-y-[5px] text-[24px] leading-none text-[var(--theme-text-tertiary)]" style={{ fontFamily: 'var(--font-arabic)' }}>ع</span>}
+      />
+
+      {viewMode === "normal" && (
+        <SettingCard
+          icon={<svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M3 4h10M3 8h6M3 12h8" /></svg>}
+          iconBg="bg-blue-500" label="Çeviri" subtitle="Meal metnini göster"
+          checked={showTranslation} onChange={setShowTranslation}
+        >
+          <CompactSlider value={translationFontSize} onChange={setNormalTranslationFontSize} />
+        </SettingCard>
+      )}
+
+      {viewMode === "wordByWord" && (
+        <>
+          {(wbwTransliterationFirst
+            ? [
+                { key: "tl", label: "Transliterasyon", subtitle: "Okunuş rehberi", checked: showWordTransliteration, onChange: setShowWordTransliteration, size: wordTransliterationSize, onSize: setWordTransliterationSize, iconBg: "bg-purple-500", icon: <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1.5 12L4 3.5h1L7.5 12" /><path d="M2.8 9.5h3.4" /><path d="M14 12V8.5a2 2 0 1 0-4 0V12" /></svg> },
+                { key: "tr", label: "Kelime Çevirisi", subtitle: "Her kelimenin anlamı", checked: showWordTranslation, onChange: setShowWordTranslation, size: wordTranslationSize, onSize: setWordTranslationSize, iconBg: "bg-emerald-500", icon: <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><rect x="1.5" y="2" width="5.5" height="5.5" rx="1.5" /><rect x="9" y="2" width="5.5" height="5.5" rx="1.5" /><rect x="1.5" y="9.5" width="5.5" height="5" rx="1.5" /><rect x="9" y="9.5" width="5.5" height="5" rx="1.5" /></svg> },
+              ]
+            : [
+                { key: "tr", label: "Kelime Çevirisi", subtitle: "Her kelimenin anlamı", checked: showWordTranslation, onChange: setShowWordTranslation, size: wordTranslationSize, onSize: setWordTranslationSize, iconBg: "bg-emerald-500", icon: <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"><rect x="1.5" y="2" width="5.5" height="5.5" rx="1.5" /><rect x="9" y="2" width="5.5" height="5.5" rx="1.5" /><rect x="1.5" y="9.5" width="5.5" height="5" rx="1.5" /><rect x="9" y="9.5" width="5.5" height="5" rx="1.5" /></svg> },
+                { key: "tl", label: "Transliterasyon", subtitle: "Okunuş rehberi", checked: showWordTransliteration, onChange: setShowWordTransliteration, size: wordTransliterationSize, onSize: setWordTransliterationSize, iconBg: "bg-purple-500", icon: <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1.5 12L4 3.5h1L7.5 12" /><path d="M2.8 9.5h3.4" /><path d="M14 12V8.5a2 2 0 1 0-4 0V12" /></svg> },
+              ]
+          ).map((item) => (
+            <SettingCard key={item.key} icon={item.icon} iconBg={item.iconBg} label={item.label} subtitle={item.subtitle} checked={item.checked} onChange={item.onChange}>
+              <CompactSlider value={item.size} onChange={item.onSize} />
+            </SettingCard>
+          ))}
+          <button type="button" onClick={() => setWbwTransliterationFirst(!wbwTransliterationFirst)}
+            className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[var(--theme-pill-bg)] px-3 py-2 text-[12px] font-medium text-[var(--theme-text-tertiary)] transition-colors hover:bg-[var(--theme-hover-bg)]">
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M7 4v16M7 4l-4 4M7 4l4 4M17 20V4M17 20l-4-4M17 20l4-4" /></svg>
+            Sırayı Değiştir
+          </button>
+        </>
+      )}
+    </>
+  );
+}
+
+/* ─── Tab: Tema ─── */
+
+function ThemeTabContent({ theme, setTheme, colorizeWords, setColorizeWords, colorPaletteId, setColorPalette }: {
+  theme: Theme; setTheme: (t: Theme) => void;
+  colorizeWords: boolean; setColorizeWords: (v: boolean) => void;
+  colorPaletteId: ColorPaletteId; setColorPalette: (id: ColorPaletteId) => void;
+}) {
+  return (
+    <>
+      <div className="mb-4">
+        <span className="mb-2 block text-[12px] font-medium text-[var(--theme-text-tertiary)]">Tema</span>
+        <div className="flex items-center justify-center gap-4">
+          {THEMES.map((t) => (
+            <button key={t.value} onClick={() => setTheme(t.value)} className="flex flex-col items-center gap-1.5" aria-label={t.label}>
+              <span className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all ${theme === t.value ? "border-primary-600 ring-2 ring-primary-600/30" : "border-[var(--theme-divider)]"}`} style={{ backgroundColor: t.color }}>
+                {theme === t.value && <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke={t.value === "dark" ? "#e5e5e5" : "#059669"} strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+              </span>
+              <span className="text-[11px] text-[var(--theme-text-tertiary)]">{t.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <Divider />
+      <ToggleRow label="Kelime Renklendirme" checked={colorizeWords} onChange={setColorizeWords} />
+      {colorizeWords && (
+        <div className="mb-3 flex items-center gap-2">
+          {COLOR_PALETTES.map((p) => (
+            <button key={p.id} onClick={() => setColorPalette(p.id)} className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all ${colorPaletteId === p.id ? "border-primary-600 ring-2 ring-primary-600/30" : "border-[var(--theme-divider)]"}`} aria-label={p.name} title={p.name}>
+              <svg width="18" height="18" viewBox="0 0 18 18"><rect x="1" y="1" width="7" height="7" rx="1.5" fill={p.colors[0]} /><rect x="10" y="1" width="7" height="7" rx="1.5" fill={p.colors[1]} /><rect x="1" y="10" width="7" height="7" rx="1.5" fill={p.colors[2]} /><rect x="10" y="10" width="7" height="7" rx="1.5" fill={p.colors[3]} /></svg>
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ─── Tab: Yazı Tipi ─── */
+
+function FontTabContent({ arabicFontId, setArabicFont }: { arabicFontId: string; setArabicFont: (id: string) => void }) {
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (fontsLoaded) return;
+    ARABIC_FONTS.filter((f) => f.source === "google" && f.googleUrl).forEach((f) => {
+      if (!document.querySelector(`link[href="${f.googleUrl}"]`)) {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = f.googleUrl!;
+        document.head.appendChild(link);
+      }
+    });
+    setFontsLoaded(true);
+  }, [fontsLoaded]);
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {ARABIC_FONTS.map((font) => (
+        <button key={font.id} onClick={() => setArabicFont(font.id)}
+          className={`flex flex-col items-center gap-1 rounded-xl border-2 px-2 py-3 transition-all ${arabicFontId === font.id ? "border-primary-600 bg-primary-600/5 ring-1 ring-primary-600/20" : "border-[var(--theme-divider)] hover:border-[var(--theme-text-quaternary)]"}`}>
+          <span className="arabic-text text-[22px] leading-tight text-[var(--theme-text)]" style={{ fontFamily: font.family }} dir="rtl">{BISMILLAH_SAMPLE}</span>
+          <span className={`text-[10px] font-medium ${arabicFontId === font.id ? "text-primary-700" : "text-[var(--theme-text-tertiary)]"}`}>{font.name}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Main Component ─── */
+
 export function ReadingToolbar({ segmentStyle }: { segmentStyle?: boolean } = {}) {
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<ToolbarTab>("boyut");
   const popoverRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
+  // Preview verse (Bakara 45)
+  const { data: previewVerse } = useQuery(verseByKeyQueryOptions("2:45"));
+
   // View mode
   const viewMode = usePreferencesStore((s) => s.viewMode);
+  const setViewMode = usePreferencesStore((s) => s.setViewMode);
 
   // Arabic font sizes (per-mode)
   const normalArabicFontSize = usePreferencesStore((s) => s.normalArabicFontSize);
@@ -107,7 +353,7 @@ export function ReadingToolbar({ segmentStyle }: { segmentStyle?: boolean } = {}
   const setWbwArabicFontSize = usePreferencesStore((s) => s.setWbwArabicFontSize);
   const setMushafArabicFontSize = usePreferencesStore((s) => s.setMushafArabicFontSize);
 
-  // Translation (normal mode)
+  // Translation
   const normalTranslationFontSize = usePreferencesStore((s) => s.normalTranslationFontSize);
   const setNormalTranslationFontSize = usePreferencesStore((s) => s.setNormalTranslationFontSize);
   const showTranslation = usePreferencesStore((s) => s.showTranslation);
@@ -135,30 +381,17 @@ export function ReadingToolbar({ segmentStyle }: { segmentStyle?: boolean } = {}
   const theme = usePreferencesStore((s) => s.theme);
   const setTheme = usePreferencesStore((s) => s.setTheme);
 
-  // Derive current mode's Arabic font size
-  const arabicFontSize = getArabicFontSizeForMode({ viewMode, normalArabicFontSize, wbwArabicFontSize, mushafArabicFontSize });
-  const translationFontSize = getTranslationFontSizeForMode({ viewMode, normalTranslationFontSize });
-  const setArabicFontSize = (size: number) => {
-    switch (viewMode) {
-      case "wordByWord": return setWbwArabicFontSize(size);
-      case "mushaf": return setMushafArabicFontSize(size);
-      default: return setNormalArabicFontSize(size);
-    }
-  };
+  // Font
+  const arabicFontId = usePreferencesStore((s) => s.arabicFontId);
+  const setArabicFont = usePreferencesStore((s) => s.setArabicFont);
 
-  const handleClickOutside = useCallback(
-    (e: MouseEvent) => {
-      if (
-        popoverRef.current &&
-        !popoverRef.current.contains(e.target as Node) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false);
-      }
-    },
-    [],
-  );
+  const translationFontSize = getTranslationFontSizeForMode({ viewMode, normalTranslationFontSize });
+
+  const handleClickOutside = useCallback((e: MouseEvent) => {
+    if (popoverRef.current && !popoverRef.current.contains(e.target as Node) && buttonRef.current && !buttonRef.current.contains(e.target as Node)) {
+      setOpen(false);
+    }
+  }, []);
 
   const handleEscape = useCallback((e: KeyboardEvent) => {
     if (e.key === "Escape") setOpen(false);
@@ -177,24 +410,13 @@ export function ReadingToolbar({ segmentStyle }: { segmentStyle?: boolean } = {}
 
   return (
     <div className="relative">
-      <button
-        ref={buttonRef}
-        onClick={() => setOpen((v) => !v)}
+      <button ref={buttonRef} onClick={() => setOpen((v) => !v)}
         className={`flex items-center gap-1 font-medium transition-colors ${
           segmentStyle
-            ? `relative z-[1] justify-center rounded-lg px-2.5 py-1.5 text-[12px] sm:px-3.5 ${
-                open
-                  ? "text-[var(--theme-text)]"
-                  : "text-[var(--theme-text-tertiary)] hover:text-[var(--theme-text-secondary)]"
-              }`
-            : `h-8 rounded-full px-3 text-[13px] ${
-                open
-                  ? "bg-primary-600 text-white"
-                  : "bg-[var(--theme-pill-bg)] text-[var(--theme-text)] hover:bg-[var(--theme-hover-bg)]"
-              }`
+            ? `relative z-[1] justify-center rounded-lg px-2.5 py-1.5 text-[12px] sm:px-3.5 ${open ? "text-[var(--theme-text)]" : "text-[var(--theme-text-tertiary)] hover:text-[var(--theme-text-secondary)]"}`
+            : `h-8 rounded-full px-3 text-[13px] ${open ? "bg-primary-600 text-white" : "bg-[var(--theme-pill-bg)] text-[var(--theme-text)] hover:bg-[var(--theme-hover-bg)]"}`
         }`}
-        aria-label="Okuma ayarları"
-        aria-expanded={open}
+        aria-label="Okuma ayarları" aria-expanded={open}
       >
         <span className="text-[14px] font-semibold">A</span>
         <span className="arabic-text text-[14px] font-semibold leading-none">ع</span>
@@ -202,188 +424,53 @@ export function ReadingToolbar({ segmentStyle }: { segmentStyle?: boolean } = {}
 
       {open && (
         <>
-          {/* Backdrop — mobile only */}
-          <div
-            className="fixed inset-0 z-40 bg-black/30 sm:hidden"
-            onClick={() => setOpen(false)}
-          />
-          <div
-            ref={popoverRef}
-            className="fixed inset-x-0 top-1/2 z-50 max-h-[80vh] -translate-y-1/2 overflow-y-auto overscroll-contain border-y border-[var(--theme-border)] bg-[var(--theme-bg-elevated)] p-5 shadow-[var(--shadow-float)] sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-72 sm:max-h-[70vh] sm:translate-y-0 sm:rounded-2xl sm:border sm:p-4 sm:animate-toolbar-in"
+          <div className="fixed inset-0 z-40 bg-black/30 sm:hidden" onClick={() => setOpen(false)} />
+          <div ref={popoverRef}
+            className="fixed inset-x-0 top-1/2 z-50 max-h-[80vh] -translate-y-1/2 overflow-y-auto overscroll-contain border-y border-[var(--theme-border)] bg-[var(--theme-bg-elevated)] p-5 shadow-[var(--shadow-float)] sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80 sm:max-h-[70vh] sm:translate-y-0 sm:rounded-2xl sm:border sm:p-4 sm:animate-toolbar-in"
             style={{ backdropFilter: "saturate(180%) blur(20px)" }}
           >
-          {/* Header: mode badge + close button */}
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="rounded-md bg-primary-600/10 px-2 py-0.5 text-[11px] font-semibold text-primary-700">
-                {VIEW_MODE_LABELS[viewMode]}
-              </span>
-              <span className="text-[11px] text-[var(--theme-text-quaternary)]">
-                moduna ait ayarlar
-              </span>
-            </div>
-            <button
-              onClick={() => setOpen(false)}
-              className="flex h-7 items-center gap-1 rounded-full bg-primary-600 px-2.5 text-[12px] font-medium text-white transition-colors hover:bg-primary-700 sm:hidden"
-              aria-label="Kapat"
-            >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-              Tamam
-            </button>
-          </div>
-
-          {/* ─── Common: Arabic font size ─── */}
-          <SizeSlider
-            label="Arapça Boyutu"
-            value={arabicFontSize}
-            onChange={setArabicFontSize}
-            smallIcon={<span className="-translate-y-[4px] text-[15px] leading-none text-[var(--theme-text-tertiary)]" style={{ fontFamily: 'var(--font-arabic)' }}>ع</span>}
-            largeIcon={<span className="-translate-y-[5px] text-[24px] leading-none text-[var(--theme-text-tertiary)]" style={{ fontFamily: 'var(--font-arabic)' }}>ع</span>}
-          />
-
-          {/* ─── Normal mode: Translation controls ─── */}
-          {viewMode === "normal" && (
-            <>
-              <SizeSlider
-                label="Çeviri Boyutu"
-                value={translationFontSize}
-                onChange={setNormalTranslationFontSize}
-                smallIcon={<span className="text-[13px] text-[var(--theme-text-tertiary)]">A</span>}
-                largeIcon={<span className="text-[24px] leading-none text-[var(--theme-text-tertiary)]">A</span>}
-              />
-              <ToggleRow
-                label="Çeviri Göster"
-                checked={showTranslation}
-                onChange={setShowTranslation}
-              />
-            </>
-          )}
-
-          {/* ─── Word-by-word mode: WBW controls ─── */}
-          {viewMode === "wordByWord" && (
-            <>
-              {(wbwTransliterationFirst
-                ? [
-                    { key: "transliteration", label: "Transliterasyon", sizeLabel: "Transliterasyon Boyutu", checked: showWordTransliteration, onChange: setShowWordTransliteration, size: wordTransliterationSize, onSizeChange: setWordTransliterationSize },
-                    { key: "translation", label: "Kelime Çevirisi", sizeLabel: "Kelime Çevirisi Boyutu", checked: showWordTranslation, onChange: setShowWordTranslation, size: wordTranslationSize, onSizeChange: setWordTranslationSize },
-                  ]
-                : [
-                    { key: "translation", label: "Kelime Çevirisi", sizeLabel: "Kelime Çevirisi Boyutu", checked: showWordTranslation, onChange: setShowWordTranslation, size: wordTranslationSize, onSizeChange: setWordTranslationSize },
-                    { key: "transliteration", label: "Transliterasyon", sizeLabel: "Transliterasyon Boyutu", checked: showWordTransliteration, onChange: setShowWordTransliteration, size: wordTransliterationSize, onSizeChange: setWordTransliterationSize },
-                  ]
-              ).map((item) => (
-                <div key={item.key}>
-                  <ToggleRow label={item.label} checked={item.checked} onChange={item.onChange} />
-                  {item.checked && (
-                    <SizeSlider
-                      label={item.sizeLabel}
-                      value={item.size}
-                      onChange={item.onSizeChange}
-                      smallIcon={<span className="text-[13px] text-[var(--theme-text-tertiary)]">A</span>}
-                      largeIcon={<span className="text-[24px] leading-none text-[var(--theme-text-tertiary)]">A</span>}
-                    />
-                  )}
-                </div>
-              ))}
-              {/* Swap order button */}
-              <button
-                type="button"
-                onClick={() => setWbwTransliterationFirst(!wbwTransliterationFirst)}
-                className="mb-1 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[var(--theme-divider)] px-2 py-1.5 text-[12px] font-medium text-[var(--theme-text-tertiary)] transition-colors hover:bg-[var(--theme-hover-bg)]"
-              >
-                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M7 4v16M7 4l-4 4M7 4l4 4M17 20V4M17 20l-4-4M17 20l4-4" />
-                </svg>
-                Sırayı Değiştir
+            {/* Mobile header */}
+            <div className="mb-3 flex items-center justify-between sm:hidden">
+              <span className="text-[14px] font-semibold text-[var(--theme-text)]">Okuma Ayarları</span>
+              <button onClick={() => setOpen(false)} className="flex h-7 items-center gap-1 rounded-full bg-primary-600 px-2.5 text-[12px] font-medium text-white transition-colors hover:bg-primary-700" aria-label="Kapat">
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                Tamam
               </button>
-            </>
-          )}
-
-          <Divider />
-
-          {/* ─── Common: Colorize words ─── */}
-          <ToggleRow
-            label="Kelime Renklendirme"
-            checked={colorizeWords}
-            onChange={setColorizeWords}
-          />
-
-          {/* Color palette selector (visible when colorize is on) */}
-          {colorizeWords && (
-            <div className="mb-3 flex items-center gap-2">
-              {COLOR_PALETTES.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setColorPalette(p.id)}
-                  className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all ${
-                    colorPaletteId === p.id
-                      ? "border-primary-600 ring-2 ring-primary-600/30"
-                      : "border-[var(--theme-divider)]"
-                  }`}
-                  aria-label={p.name}
-                  title={p.name}
-                >
-                  {/* 4-color mini swatch */}
-                  <svg width="18" height="18" viewBox="0 0 18 18">
-                    <rect x="1" y="1" width="7" height="7" rx="1.5" fill={p.colors[0]} />
-                    <rect x="10" y="1" width="7" height="7" rx="1.5" fill={p.colors[1]} />
-                    <rect x="1" y="10" width="7" height="7" rx="1.5" fill={p.colors[2]} />
-                    <rect x="10" y="10" width="7" height="7" rx="1.5" fill={p.colors[3]} />
-                  </svg>
-                </button>
-              ))}
             </div>
-          )}
 
-          <Divider />
+            {/* Live preview */}
+            {previewVerse && <PreviewCard verse={previewVerse} />}
 
-          {/* ─── Common: Theme selector ─── */}
-          <div>
-            <span className="mb-2 block text-[12px] font-medium text-[var(--theme-text-tertiary)]">
-              Tema
-            </span>
-            <div className="flex items-center justify-center gap-4">
-              {THEMES.map((t) => (
-                <button
-                  key={t.value}
-                  onClick={() => setTheme(t.value)}
-                  className="flex flex-col items-center gap-1.5"
-                  aria-label={t.label}
-                >
-                  <span
-                    className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all ${
-                      theme === t.value
-                        ? "border-primary-600 ring-2 ring-primary-600/30"
-                        : "border-[var(--theme-divider)]"
-                    }`}
-                    style={{ backgroundColor: t.color }}
-                  >
-                    {theme === t.value && (
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke={t.value === "dark" ? "#e5e5e5" : "#059669"}
-                        strokeWidth={2.5}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    )}
-                  </span>
-                  <span className="text-[11px] text-[var(--theme-text-tertiary)]">
-                    {t.label}
-                  </span>
-                </button>
-              ))}
+            {/* Tab bar */}
+            <div className="mb-4">
+              <SegmentedControl options={TOOLBAR_TABS} value={activeTab} onChange={setActiveTab} stretch />
             </div>
+
+            {/* Tab content */}
+            {activeTab === "boyut" && (
+              <ModeTabContent
+                viewMode={viewMode} setViewMode={setViewMode}
+                normalArabicFontSize={normalArabicFontSize} setNormalArabicFontSize={setNormalArabicFontSize}
+                wbwArabicFontSize={wbwArabicFontSize} setWbwArabicFontSize={setWbwArabicFontSize}
+                mushafArabicFontSize={mushafArabicFontSize} setMushafArabicFontSize={setMushafArabicFontSize}
+                translationFontSize={translationFontSize} setNormalTranslationFontSize={setNormalTranslationFontSize}
+                showTranslation={showTranslation} setShowTranslation={setShowTranslation}
+                showWordTranslation={showWordTranslation} setShowWordTranslation={setShowWordTranslation}
+                wordTranslationSize={wordTranslationSize} setWordTranslationSize={setWordTranslationSize}
+                showWordTransliteration={showWordTransliteration} setShowWordTransliteration={setShowWordTransliteration}
+                wordTransliterationSize={wordTransliterationSize} setWordTransliterationSize={setWordTransliterationSize}
+                wbwTransliterationFirst={wbwTransliterationFirst} setWbwTransliterationFirst={setWbwTransliterationFirst}
+              />
+            )}
+
+            {activeTab === "tema" && (
+              <ThemeTabContent theme={theme} setTheme={setTheme} colorizeWords={colorizeWords} setColorizeWords={setColorizeWords} colorPaletteId={colorPaletteId} setColorPalette={setColorPalette} />
+            )}
+
+            {activeTab === "font" && (
+              <FontTabContent arabicFontId={arabicFontId} setArabicFont={setArabicFont} />
+            )}
           </div>
-        </div>
         </>
       )}
     </div>

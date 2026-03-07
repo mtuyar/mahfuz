@@ -26,6 +26,9 @@ export function AyahText({
   const colors = getActiveColors({ colorPaletteId });
   const viewMode = viewModeProp ?? storeViewMode;
 
+  const normalArabicFontSize = usePreferencesStore((s) => s.normalArabicFontSize);
+  const normalTranslationFontSize = usePreferencesStore((s) => s.normalTranslationFontSize);
+
   const currentVerseKey = useAudioStore((s) => s.currentVerseKey);
   const currentWordPosition = useAudioStore((s) => s.currentWordPosition);
   const playbackState = useAudioStore((s) => s.playbackState);
@@ -116,7 +119,7 @@ export function AyahText({
               activeWordPosition={activeWordPos}
             />
           ) : (
-            <p className="arabic-text text-[1.65rem] leading-[2.6] text-[var(--theme-text)]">
+            <p className="arabic-text leading-[2.6] text-[var(--theme-text)]" style={{ fontSize: `calc(1.65rem * ${normalArabicFontSize})` }}>
               {verse.words
                 ? verse.words
                     .filter((w) => w.char_type_name === "word")
@@ -153,7 +156,8 @@ export function AyahText({
           {verse.translations.map((t) => (
             <div key={t.id}>
               <p
-                className="translation-text text-[15px] leading-[1.8] text-[var(--theme-text-secondary)]"
+                className="translation-text leading-[1.8] text-[var(--theme-text-secondary)]"
+                style={{ fontSize: `calc(15px * ${normalTranslationFontSize})` }}
                 dangerouslySetInnerHTML={{ __html: t.text }}
               />
               <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-[var(--theme-text-quaternary)]">

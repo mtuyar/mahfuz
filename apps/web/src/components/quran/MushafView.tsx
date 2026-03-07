@@ -19,6 +19,7 @@ export function MushafView({ verses, showBismillah = true }: MushafViewProps) {
   const colorizeWords = usePreferencesStore((s) => s.colorizeWords);
   const colorPaletteId = usePreferencesStore((s) => s.colorPaletteId);
   const colors = getActiveColors({ colorPaletteId });
+  const mushafArabicFontSize = usePreferencesStore((s) => s.mushafArabicFontSize);
 
   /* ── Zoom / pan state (refs for perf, state only for touchAction toggle) ── */
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -162,7 +163,8 @@ export function MushafView({ verses, showBismillah = true }: MushafViewProps) {
                 {/* Writing surface */}
                 <div className="mushaf-content">
                   <p
-                    className="arabic-text text-center text-[1.65rem] leading-[2.8] text-[var(--mushaf-ink)]"
+                    className="arabic-text text-center leading-[2.8] text-[var(--mushaf-ink)]"
+                    style={{ fontSize: `calc(1.65rem * ${mushafArabicFontSize})` }}
                     dir="rtl"
                   >
                     {verses.map((verse) => {

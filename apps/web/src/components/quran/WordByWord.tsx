@@ -19,6 +19,7 @@ export function WordByWord({
   const translationSize = usePreferencesStore((s) => s.wordTranslationSize);
   const transliterationSize = usePreferencesStore((s) => s.wordTransliterationSize);
   const transliterationFirst = usePreferencesStore((s) => s.wbwTransliterationFirst);
+  const wbwArabicFontSize = usePreferencesStore((s) => s.wbwArabicFontSize);
 
   const wordItems = words.filter((w) => w.char_type_name === "word");
 
@@ -69,14 +70,15 @@ export function WordByWord({
             }`}
           >
             <span
-              className={`word-highlight arabic-text cursor-pointer text-2xl ${isActive ? "active" : ""}`}
-              style={
-                colorizeWords && colors.length > 0 && !isActive
+              className={`word-highlight arabic-text cursor-pointer ${isActive ? "active" : ""}`}
+              style={{
+                fontSize: `calc(1.5rem * ${wbwArabicFontSize})`,
+                ...(colorizeWords && colors.length > 0 && !isActive
                   ? { color: colors[i % colors.length] }
                   : isActive
-                    ? undefined
-                    : { color: "var(--theme-text)" }
-              }
+                    ? {}
+                    : { color: "var(--theme-text)" }),
+              }}
             >
               {word.text_uthmani}
             </span>
@@ -93,7 +95,8 @@ export function WordByWord({
         .map((w) => (
           <span
             key={w.id}
-            className="arabic-text self-start text-2xl text-[var(--theme-text-quaternary)]"
+            className="arabic-text self-start text-[var(--theme-text-quaternary)]"
+            style={{ fontSize: `calc(1.5rem * ${wbwArabicFontSize})` }}
           >
             {w.text}
           </span>

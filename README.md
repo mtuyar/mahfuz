@@ -2,7 +2,7 @@
 
 <br>
 
-<img src="apps/web/public/icons/icon-512.png" width="180" height="180" alt="Mahfuz">
+<img src="apps/web/public/icons/icon-512.png" width="280" alt="Mahfuz">
 
 <br><br>
 

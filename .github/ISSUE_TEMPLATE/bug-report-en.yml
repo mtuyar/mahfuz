@@ -1,0 +1,86 @@
+name: "Bug Report"
+description: "Report a bug or unexpected behavior."
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report
+
+        Please report the bug by filling out the form below. The more detail you provide, the faster we can resolve it.
+
+  - type: input
+    id: summary
+    attributes:
+      label: "Summary"
+      description: "Summarize the bug in one sentence"
+      placeholder: "e.g. White screen when switching pages in Mushaf mode"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to Reproduce"
+      description: "Steps to reproduce the bug"
+      placeholder: |
+        1. Go to ...
+        2. Click on ...
+        3. Error occurs
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Expected Behavior"
+      description: "What did you expect to happen?"
+      placeholder: "The page should transition smoothly"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: "Actual Behavior"
+      description: "What happened instead?"
+      placeholder: "The page stayed blank and failed to load"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: "Browser"
+      description: "Which browser did you encounter this in?"
+      options:
+        - "Chrome"
+        - "Safari"
+        - "Firefox"
+        - "Edge"
+        - "Samsung Internet"
+        - "Other"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: "Device"
+      description: "Which device did you encounter this on?"
+      options:
+        - "Desktop / Laptop"
+        - "Phone (Android)"
+        - "Phone (iOS)"
+        - "Tablet"
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: "Screenshot"
+      description: "If available, drag and drop a screenshot here"
+    validations:
+      required: false

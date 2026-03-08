@@ -1,0 +1,86 @@
+name: "Hata Bildirimi"
+description: "Bir hata veya beklenmeyen davranış bildirin."
+title: "[Hata] "
+labels: ["hata"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Hata Bildirimi
+
+        Karşılaştığınız hatayı aşağıdaki formu doldurarak bildirin. Ne kadar detay verirseniz, o kadar hızlı çözüme ulaşabiliriz.
+
+  - type: input
+    id: summary
+    attributes:
+      label: "Özet"
+      description: "Hatayı tek cümleyle özetleyin"
+      placeholder: "örn. Mushaf modunda sayfa geçişinde beyaz ekran"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Tekrar Adımları"
+      description: "Hatayı tekrar oluşturmak için adımları yazın"
+      placeholder: |
+        1. ... sayfasına git
+        2. ... butonuna tıkla
+        3. ... hatası oluşuyor
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Beklenen Davranış"
+      description: "Ne olmasını bekliyordunuz?"
+      placeholder: "Sayfa düzgün şekilde geçiş yapmalıydı"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: "Gerçekleşen Davranış"
+      description: "Bunun yerine ne oldu?"
+      placeholder: "Sayfa beyaz kaldı ve yüklenemedi"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: "Tarayıcı"
+      description: "Hangi tarayıcıda karşılaştınız?"
+      options:
+        - "Chrome"
+        - "Safari"
+        - "Firefox"
+        - "Edge"
+        - "Samsung Internet"
+        - "Diğer"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: "Cihaz"
+      description: "Hangi cihazda karşılaştınız?"
+      options:
+        - "Masaüstü / Dizüstü"
+        - "Telefon (Android)"
+        - "Telefon (iOS)"
+        - "Tablet"
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: "Ekran Görüntüsü"
+      description: "Varsa ekran görüntüsünü buraya sürükleyip bırakın"
+    validations:
+      required: false

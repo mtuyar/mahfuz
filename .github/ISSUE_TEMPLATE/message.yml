@@ -1,0 +1,37 @@
+name: "Mesaj"
+description: "Genel bir mesaj, soru veya geri bildirim gönderin."
+title: "[Mesaj] "
+labels: ["mesaj"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Mesaj
+
+        Soru, görüş veya geri bildiriminizi bizimle paylaşın. Her türlü mesajınızı değerlendiriyoruz.
+
+  - type: input
+    id: subject
+    attributes:
+      label: "Konu"
+      description: "Mesajınızın konusu"
+      placeholder: "örn. Uygulama hakkında bir sorum var"
+    validations:
+      required: true
+
+  - type: textarea
+    id: message
+    attributes:
+      label: "Mesajınız"
+      description: "Mesajınızı detaylı şekilde yazın"
+    validations:
+      required: true
+
+  - type: input
+    id: email
+    attributes:
+      label: "İletişim E-postası (isteğe bağlı)"
+      description: "Geri dönüş yapabilmemiz için e-posta adresiniz"
+      placeholder: "ornek@email.com"
+    validations:
+      required: false

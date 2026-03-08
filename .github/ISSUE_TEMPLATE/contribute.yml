@@ -1,0 +1,63 @@
+name: "Katkı Vermek İstiyorum"
+description: "Projeye katkıda bulunmak istediğinizi bildirin."
+title: "[Katkı] "
+labels: ["katkı", "topluluk"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Katkı Vermek İstiyorum
+
+        Mahfuz'a katkıda bulunmak istemeniz bizi çok mutlu eder! Aşağıdaki formu doldurarak kendinizi tanıtın, birlikte çalışalım.
+
+  - type: input
+    id: name
+    attributes:
+      label: "Ad / Kullanıcı Adı"
+      description: "Nasıl hitap edelim?"
+      placeholder: "örn. Ahmet veya @ahmet"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: areas
+    attributes:
+      label: "İlgi Alanları"
+      description: "Hangi alanlarda katkıda bulunmak istersiniz?"
+      options:
+        - label: "Frontend (React, TanStack, Tailwind)"
+        - label: "Backend (API, veritabanı, auth)"
+        - label: "Mobil uygulama (React Native)"
+        - label: "UI/UX tasarım"
+        - label: "Arapça metin / Hat / Tecvid"
+        - label: "Meal / Çeviri doğrulama"
+        - label: "Test ve kalite güvence"
+        - label: "Dokümantasyon"
+        - label: "Diğer"
+
+  - type: textarea
+    id: experience
+    attributes:
+      label: "Deneyim"
+      description: "İlgili alandaki deneyiminizi kısaca anlatın"
+      placeholder: "örn. 3 yıllık React deneyimim var, açık kaynak projelere katkıda bulundum..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: ideas
+    attributes:
+      label: "Çalışmak İstediğiniz Konu"
+      description: "Aklınızda belirli bir konu varsa paylaşın, yoksa boş bırakın — yönlendirelim"
+      placeholder: "örn. Tefsir paneli eklemek istiyorum / Mevcut issue'lardan birine bakmak isterim"
+    validations:
+      required: false
+
+  - type: input
+    id: contact
+    attributes:
+      label: "İletişim (isteğe bağlı)"
+      description: "GitHub dışında ulaşabileceğimiz bir yol (Discord, e-posta vb.)"
+      placeholder: "örn. Discord: ahmet#1234"
+    validations:
+      required: false

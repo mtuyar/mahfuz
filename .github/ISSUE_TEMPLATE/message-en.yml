@@ -1,0 +1,37 @@
+name: "Message"
+description: "Send a general message, question, or feedback."
+title: "[Message] "
+labels: ["message"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Message
+
+        Share your question, opinion, or feedback with us. We value all kinds of messages.
+
+  - type: input
+    id: subject
+    attributes:
+      label: "Subject"
+      description: "The subject of your message"
+      placeholder: "e.g. I have a question about the app"
+    validations:
+      required: true
+
+  - type: textarea
+    id: message
+    attributes:
+      label: "Your Message"
+      description: "Write your message in detail"
+    validations:
+      required: true
+
+  - type: input
+    id: email
+    attributes:
+      label: "Contact Email (optional)"
+      description: "Your email address so we can follow up"
+      placeholder: "example@email.com"
+    validations:
+      required: false

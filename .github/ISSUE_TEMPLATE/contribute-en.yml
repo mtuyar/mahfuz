@@ -1,0 +1,63 @@
+name: "I Want to Contribute"
+description: "Let us know you'd like to contribute to the project."
+title: "[Contribute] "
+labels: ["contribution", "community"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## I Want to Contribute
+
+        We're thrilled that you'd like to contribute to Mahfuz! Fill out the form below to introduce yourself, and let's work together.
+
+  - type: input
+    id: name
+    attributes:
+      label: "Name / Username"
+      description: "How should we address you?"
+      placeholder: "e.g. John or @johndoe"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: areas
+    attributes:
+      label: "Areas of Interest"
+      description: "Which areas would you like to contribute to?"
+      options:
+        - label: "Frontend (React, TanStack, Tailwind)"
+        - label: "Backend (API, database, auth)"
+        - label: "Mobile app (React Native)"
+        - label: "UI/UX design"
+        - label: "Arabic text / Calligraphy / Tajweed"
+        - label: "Translation verification"
+        - label: "Testing and QA"
+        - label: "Documentation"
+        - label: "Other"
+
+  - type: textarea
+    id: experience
+    attributes:
+      label: "Experience"
+      description: "Briefly describe your experience in the relevant area"
+      placeholder: "e.g. 3 years of React experience, contributed to open source projects..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: ideas
+    attributes:
+      label: "Topic You'd Like to Work On"
+      description: "If you have a specific topic in mind, share it — otherwise leave blank and we'll guide you"
+      placeholder: "e.g. I'd like to add a tafsir panel / I'd like to pick up an existing issue"
+    validations:
+      required: false
+
+  - type: input
+    id: contact
+    attributes:
+      label: "Contact (optional)"
+      description: "A way to reach you outside GitHub (Discord, email, etc.)"
+      placeholder: "e.g. Discord: johndoe#1234"
+    validations:
+      required: false

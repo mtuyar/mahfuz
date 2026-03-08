@@ -62,6 +62,14 @@ const FONT_CREDITS = [
   },
 ] as const;
 
+const ISSUE_LINKS = [
+  { template: "feature-request.yml", label: "Geliştirme Talebi", sublabel: "Feature Request", iconBg: "bg-blue-500", iconPath: '<path d="M12 5v14M5 12h14" />' },
+  { template: "bug-report.yml", label: "Hata Bildirimi", sublabel: "Bug Report", iconBg: "bg-red-500", iconPath: '<circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />' },
+  { template: "copyright.yml", label: "Telif Hakkı Bildirimi", sublabel: "Copyright Notice", iconBg: "bg-amber-500", iconPath: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" />' },
+  { template: "message.yml", label: "Mesaj", sublabel: "Message", iconBg: "bg-teal-500", iconPath: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />' },
+  { template: "contribute.yml", label: "Katkı Vermek İstiyorum", sublabel: "I Want to Contribute", iconBg: "bg-purple-500", iconPath: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />' },
+] as const;
+
 function CreditsPage() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
@@ -122,33 +130,30 @@ function CreditsPage() {
         <p className="text-[13px] leading-relaxed text-[var(--theme-text-tertiary)]">
           Meal metinleri, ilgili yazarlarına ve yayıncılarına aittir. Bu uygulama, Kur'an-ı Kerim'e erişimi kolaylaştırmak amacıyla bu kaynakları bir araya getirmektedir.
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <a
-            href="https://github.com/theilgaz/mahfuz/issues/new?template=copyright.yml"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--theme-border)] px-3 py-2 text-[12px] font-medium text-[var(--theme-text-secondary)] transition-colors hover:bg-[var(--theme-hover-bg)]"
-          >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-              <line x1="4" y1="22" x2="4" y2="15" />
-            </svg>
-            Telif Hakkı Bildirimi
-          </a>
-          <a
-            href="https://github.com/theilgaz/mahfuz/issues/new?template=copyright-en.yml"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--theme-border)] px-3 py-2 text-[12px] font-medium text-[var(--theme-text-secondary)] transition-colors hover:bg-[var(--theme-hover-bg)]"
-          >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-              <line x1="4" y1="22" x2="4" y2="15" />
-            </svg>
-            Copyright Notice (EN)
-          </a>
-        </div>
       </div>
+
+      {/* Contact & Contribute */}
+      <CreditsSection title="Bize Ulaşın">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {ISSUE_LINKS.map((link) => (
+            <a
+              key={link.template}
+              href={`https://github.com/theilgaz/mahfuz/issues/new?template=${link.template}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 rounded-xl border border-[var(--theme-border)] px-3.5 py-3 transition-colors hover:bg-[var(--theme-hover-bg)]"
+            >
+              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white ${link.iconBg}`}>
+                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: link.iconPath }} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <span className="block text-[12px] font-semibold text-[var(--theme-text)]">{link.label}</span>
+                <span className="block text-[10px] text-[var(--theme-text-quaternary)]">{link.sublabel}</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </CreditsSection>
     </div>
   );
 }

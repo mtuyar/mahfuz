@@ -1,0 +1,67 @@
+name: "Yeni Geliştirme Talebi"
+description: "Yeni bir özellik veya iyileştirme önerin."
+title: "[Öneri] "
+labels: ["geliştirme", "öneri"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Yeni Geliştirme Talebi
+
+        Mahfuz'u daha iyi hâle getirmek için fikirlerinizi duymak isteriz. Lütfen önerinizi aşağıdaki formu doldurarak paylaşın.
+
+  - type: input
+    id: summary
+    attributes:
+      label: "Özet"
+      description: "Önerinizi tek cümleyle özetleyin"
+      placeholder: "örn. Sure sayfasına tefsir paneli eklenmesi"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: "Kategori"
+      description: "Öneriniz hangi alanla ilgili?"
+      options:
+        - "Okuma deneyimi"
+        - "Ses / Dinleme"
+        - "Ezberleme"
+        - "Arayüz / Tasarım"
+        - "Performans"
+        - "Erişilebilirlik"
+        - "Mobil uygulama"
+        - "Diğer"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Detaylı Açıklama"
+      description: "Önerinizi detaylı şekilde anlatın. Hangi sorunu çözüyor veya hangi ihtiyacı karşılıyor?"
+      placeholder: |
+        - Ne yapmak istiyorsunuz?
+        - Şu an bunu yapamıyor musunuz, yoksa mevcut yöntem mi yetersiz?
+        - Bu özellik sizin için ne kadar önemli?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatifler"
+      description: "Düşündüğünüz alternatif çözümler varsa belirtin"
+      placeholder: "Şu an bu ihtiyacı ... şekilde karşılıyorum ama ..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: references
+    attributes:
+      label: "Referans / Örnek"
+      description: "Benzer bir özelliği başka bir uygulamada gördüyseniz paylaşın"
+      placeholder: "örn. X uygulamasındaki ... özelliği gibi"
+    validations:
+      required: false

@@ -62,7 +62,7 @@ export function SurahHeader({ chapter, onPlay, isPlaying }: SurahHeaderProps) {
                 isMakkah ? "bg-amber-500" : "bg-emerald-600"
               }`}
             />
-            {isMakkah ? "Mekke" : "Medine"}
+            {isMakkah ? "Mekkî" : "Medenî"}
           </span>
           <span>·</span>
           <span>{chapter.verses_count} ayet</span>

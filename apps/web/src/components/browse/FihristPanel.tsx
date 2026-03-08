@@ -18,8 +18,8 @@ function PngIcon({ src }: { src: string }) {
 
 const PLACE_OPTIONS = [
   { value: "all" as PlaceFilter, label: "Tümü" },
-  { value: "makkah" as PlaceFilter, label: "Mekke", icon: <PngIcon src="/images/kaaba.png" /> },
-  { value: "madinah" as PlaceFilter, label: "Medine", icon: <PngIcon src="/images/nabawi.png" /> },
+  { value: "makkah" as PlaceFilter, label: "Mekkî", icon: <PngIcon src="/images/kaaba.png" /> },
+  { value: "madinah" as PlaceFilter, label: "Medenî", icon: <PngIcon src="/images/nabawi.png" /> },
 ];
 
 export function FihristPanel({ initialTopic }: { initialTopic?: number }) {
@@ -99,7 +99,7 @@ export function FihristPanel({ initialTopic }: { initialTopic?: number }) {
         <p className="mb-3 text-[13px] text-[var(--theme-text-tertiary)]">
           {filtered.length} sure
           {placeFilter !== "all" && (
-            <span> · {placeFilter === "makkah" ? "Mekke" : "Medine"}</span>
+            <span> · {placeFilter === "makkah" ? "Mekkî" : "Medenî"}</span>
           )}
           {juzFilter !== "all" && <span> · Cüz {juzFilter}</span>}
         </p>
@@ -138,7 +138,7 @@ export function FihristPanel({ initialTopic }: { initialTopic?: number }) {
                     <td className="px-3 py-2 text-[var(--theme-text-secondary)]">{ch.translated_name.name}</td>
                     <td className="px-3 py-2">
                       <span className="inline-flex items-center gap-1.5 text-[var(--theme-text-tertiary)]">
-                        {ch.revelation_place === "makkah" ? "Mekke" : "Medine"}
+                        {ch.revelation_place === "makkah" ? "Mekkî" : "Medenî"}
                         <img
                           src={ch.revelation_place === "makkah" ? "/images/kaaba.png" : "/images/nabawi.png"}
                           alt=""

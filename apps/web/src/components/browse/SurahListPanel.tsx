@@ -17,8 +17,8 @@ function PngIcon({ src }: { src: string }) {
 
 const FILTER_OPTIONS = [
   { value: "all" as FilterType, label: "Tümü" },
-  { value: "makkah" as FilterType, label: "Mekke", icon: <PngIcon src="/images/kaaba.png" /> },
-  { value: "madinah" as FilterType, label: "Medine", icon: <PngIcon src="/images/nabawi.png" /> },
+  { value: "makkah" as FilterType, label: "Mekkî", icon: <PngIcon src="/images/kaaba.png" /> },
+  { value: "madinah" as FilterType, label: "Medenî", icon: <PngIcon src="/images/nabawi.png" /> },
 ];
 
 const SORT_OPTIONS = [
@@ -103,7 +103,7 @@ export function SurahListPanel() {
         {filter !== "all" && (
           <span>
             {" "}
-            ({filter === "makkah" ? "Mekke" : "Medine"})
+            ({filter === "makkah" ? "Mekkî" : "Medenî"})
           </span>
         )}
       </p>

@@ -23,7 +23,7 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS build
 COPY . .
 ENV DEPLOY_TARGET=docker
-RUN pnpm build
+RUN pnpm turbo build --filter=@mahfuz/web
 
 # ── Stage 4: Runner ────────────────────────────────────
 FROM node:22-alpine AS runner

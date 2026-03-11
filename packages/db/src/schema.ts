@@ -48,7 +48,13 @@ export interface MemorizationGoalsEntry {
 /** Sync queue record for offline-first sync */
 export interface SyncQueueRecord {
   id: string;
-  table: "memorization_cards" | "review_entries" | "memorization_goals";
+  table:
+    | "memorization_cards"
+    | "review_entries"
+    | "memorization_goals"
+    | "lesson_progress"
+    | "learn_concepts"
+    | "quest_progress";
   recordId: string;
   action: "upsert" | "delete";
   data: string; // JSON stringified record
@@ -74,6 +80,7 @@ export interface LessonProgressEntry {
   score: number;
   sevapPointEarned: number;
   completedAt: number;
+  updatedAt: number; // epoch ms
 }
 
 /** Concept mastery entry for Learn module simplified SRS */
@@ -85,6 +92,7 @@ export interface LearnConceptEntry {
   incorrectCount: number;
   masteryLevel: 0 | 1 | 2 | 3;
   nextReviewAt: number;
+  updatedAt: number; // epoch ms
 }
 
 /** Quest progress entry for Side Quests */
@@ -98,6 +106,7 @@ export interface QuestProgressEntry {
   sessionsCompleted: number;
   bestSessionScore: number;
   lastPlayedAt: number;
+  updatedAt: number; // epoch ms
 }
 
 /** Dexie database for Mahfuz offline cache + memorization */
@@ -161,6 +170,46 @@ export class MahfuzDB extends Dexie {
       learn_concepts: "id, [userId+conceptId], [userId+nextReviewAt], userId",
       quest_progress: "id, [userId+questId], userId",
     });
+
+    // v6: add updatedAt to learn/quest tables for sync
+    this.version(6)
+      .stores({
+        cache: "key",
+        memorization_cards:
+          "id, [userId+verseKey], [userId+nextReviewDate], [userId+confidence]",
+        review_entries: "id, cardId, [userId+reviewedAt]",
+        memorization_goals: "userId",
+        sync_queue: "id, [table+synced], createdAt",
+        user_badges: "id, [userId+badgeId], userId",
+        lesson_progress:
+          "id, [userId+stageId], [userId+status], lessonId, [userId+updatedAt]",
+        learn_concepts:
+          "id, [userId+conceptId], [userId+nextReviewAt], userId, [userId+updatedAt]",
+        quest_progress: "id, [userId+questId], userId, [userId+updatedAt]",
+      })
+      .upgrade((tx) => {
+        const now = Date.now();
+        return Promise.all([
+          tx
+            .table("lesson_progress")
+            .toCollection()
+            .modify((entry: Record<string, unknown>) => {
+              if (!entry.updatedAt) entry.updatedAt = entry.completedAt || now;
+            }),
+          tx
+            .table("learn_concepts")
+            .toCollection()
+            .modify((entry: Record<string, unknown>) => {
+              if (!entry.updatedAt) entry.updatedAt = now;
+            }),
+          tx
+            .table("quest_progress")
+            .toCollection()
+            .modify((entry: Record<string, unknown>) => {
+              if (!entry.updatedAt) entry.updatedAt = entry.lastPlayedAt || now;
+            }),
+        ]);
+      });
   }
 }
 

@@ -1,5 +1,5 @@
 import { db } from "./schema";
-import type { QuestProgressEntry } from "./schema";
+import type { QuestProgressEntry, SyncQueueRecord } from "./schema";
 
 export class QuestRepository {
   async getQuestProgress(
@@ -17,9 +17,14 @@ export class QuestRepository {
   }
 
   async upsertQuestProgress(entry: QuestProgressEntry): Promise<void> {
-    await db.quest_progress.put({
+    const record = {
       ...entry,
       id: `${entry.userId}-${entry.questId}`,
+      updatedAt: Date.now(),
+    };
+    await db.transaction("rw", db.quest_progress, db.sync_queue, async () => {
+      await db.quest_progress.put(record);
+      await this.enqueueSync("quest_progress", record.id, "upsert", record);
     });
   }
 
@@ -42,6 +47,7 @@ export class QuestRepository {
       sessionsCompleted: 0,
       bestSessionScore: 0,
       lastPlayedAt: 0,
+      updatedAt: 0,
     };
 
     // Merge new correct words (deduplicated)
@@ -59,6 +65,24 @@ export class QuestRepository {
 
     await this.upsertQuestProgress(entry);
     return entry;
+  }
+
+  private async enqueueSync(
+    table: SyncQueueRecord["table"],
+    recordId: string,
+    action: SyncQueueRecord["action"],
+    data: unknown,
+  ): Promise<void> {
+    const record: SyncQueueRecord = {
+      id: crypto.randomUUID(),
+      table,
+      recordId,
+      action,
+      data: JSON.stringify(data),
+      synced: 0,
+      createdAt: Date.now(),
+    };
+    await db.sync_queue.add(record);
   }
 }
 

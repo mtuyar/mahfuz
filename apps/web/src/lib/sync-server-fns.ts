@@ -9,7 +9,17 @@ import {
   userBadge,
   userStats,
 } from "~/db/memorization-schema";
+import {
+  lessonProgress,
+  learnConcept,
+  questProgress,
+  userPreferences,
+  readingListItem,
+  readingHistory,
+} from "~/db/sync-schema";
 import { eq, and, gt } from "drizzle-orm";
+
+// ── Push payload ──
 
 interface PushPayload {
   cards: Array<{
@@ -41,7 +51,60 @@ interface PushPayload {
     reviewCardsPerDay: number;
     updatedAt: number;
   };
+  // Phase 6 additions
+  lessonProgressItems?: Array<{
+    id: string;
+    stageId: number;
+    lessonId: string;
+    status: string;
+    score: number;
+    sevapPointEarned: number;
+    completedAt: number;
+    updatedAt: number;
+  }>;
+  learnConcepts?: Array<{
+    id: string;
+    conceptId: string;
+    correctCount: number;
+    incorrectCount: number;
+    masteryLevel: number;
+    nextReviewAt: number;
+    updatedAt: number;
+  }>;
+  questProgressItems?: Array<{
+    id: string;
+    questId: string;
+    wordsCorrect: string[];
+    totalAttempts: number;
+    totalCorrect: number;
+    sessionsCompleted: number;
+    bestSessionScore: number;
+    lastPlayedAt: number;
+    updatedAt: number;
+  }>;
+  preferences?: {
+    data: string; // JSON blob
+    updatedAt: number;
+  };
+  readingListItems?: Array<{
+    id: string;
+    type: string;
+    itemId: number;
+    addedAt: number;
+    lastReadAt: number | null;
+    deleted: boolean;
+    updatedAt: number;
+  }>;
+  readingHistoryData?: {
+    lastSurahId: number | null;
+    lastSurahName: string | null;
+    lastPageNumber: number | null;
+    lastJuzNumber: number | null;
+    updatedAt: number;
+  };
 }
+
+// ── Pull response ──
 
 interface PullResponse {
   cards: Array<{
@@ -81,7 +144,60 @@ interface PullResponse {
     totalSevapPoint: number;
     updatedAt: number;
   } | null;
+  // Phase 6 additions
+  lessonProgressItems: Array<{
+    id: string;
+    stageId: number;
+    lessonId: string;
+    status: string;
+    score: number;
+    sevapPointEarned: number;
+    completedAt: number;
+    updatedAt: number;
+  }>;
+  learnConcepts: Array<{
+    id: string;
+    conceptId: string;
+    correctCount: number;
+    incorrectCount: number;
+    masteryLevel: number;
+    nextReviewAt: number;
+    updatedAt: number;
+  }>;
+  questProgressItems: Array<{
+    id: string;
+    questId: string;
+    wordsCorrect: string;
+    totalAttempts: number;
+    totalCorrect: number;
+    sessionsCompleted: number;
+    bestSessionScore: number;
+    lastPlayedAt: number;
+    updatedAt: number;
+  }>;
+  preferences: {
+    data: string;
+    updatedAt: number;
+  } | null;
+  readingListItems: Array<{
+    id: string;
+    type: string;
+    itemId: number;
+    addedAt: number;
+    lastReadAt: number | null;
+    deleted: number;
+    updatedAt: number;
+  }>;
+  readingHistoryData: {
+    lastSurahId: number | null;
+    lastSurahName: string | null;
+    lastPageNumber: number | null;
+    lastJuzNumber: number | null;
+    updatedAt: number;
+  } | null;
 }
+
+// ── Auth helper ──
 
 async function getAuthUser() {
   const headers = getRequestHeaders();
@@ -90,12 +206,14 @@ async function getAuthUser() {
   return session.user.id;
 }
 
+// ── Push ──
+
 export const pushChanges = createServerFn({ method: "POST" })
   .inputValidator((data: PushPayload) => data)
   .handler(async ({ data }) => {
     const userId = await getAuthUser();
 
-    // Upsert cards (last-write-wins by updatedAt)
+    // Upsert memorization cards (LWW)
     for (const card of data.cards) {
       const existing = await db
         .select({ updatedAt: memorizationCard.updatedAt })
@@ -141,7 +259,7 @@ export const pushChanges = createServerFn({ method: "POST" })
         });
     }
 
-    // Insert reviews (idempotent by id)
+    // Insert reviews (idempotent)
     for (const review of data.reviews) {
       await db
         .insert(reviewEntry)
@@ -180,8 +298,255 @@ export const pushChanges = createServerFn({ method: "POST" })
         });
     }
 
+    // ── Phase 6: Lesson progress (LWW) ──
+    if (data.lessonProgressItems) {
+      for (const item of data.lessonProgressItems) {
+        const existing = await db
+          .select({ updatedAt: lessonProgress.updatedAt })
+          .from(lessonProgress)
+          .where(
+            and(
+              eq(lessonProgress.userId, userId),
+              eq(lessonProgress.lessonId, item.lessonId),
+            ),
+          )
+          .get();
+
+        if (existing && existing.updatedAt >= item.updatedAt) continue;
+
+        await db
+          .insert(lessonProgress)
+          .values({
+            id: item.id,
+            userId,
+            stageId: item.stageId,
+            lessonId: item.lessonId,
+            status: item.status,
+            score: item.score,
+            sevapPointEarned: item.sevapPointEarned,
+            completedAt: item.completedAt,
+            updatedAt: item.updatedAt,
+          })
+          .onConflictDoUpdate({
+            target: [lessonProgress.userId, lessonProgress.lessonId],
+            set: {
+              stageId: item.stageId,
+              status: item.status,
+              score: item.score,
+              sevapPointEarned: item.sevapPointEarned,
+              completedAt: item.completedAt,
+              updatedAt: item.updatedAt,
+            },
+          });
+      }
+    }
+
+    // ── Phase 6: Learn concepts (LWW) ──
+    if (data.learnConcepts) {
+      for (const item of data.learnConcepts) {
+        const existing = await db
+          .select({ updatedAt: learnConcept.updatedAt })
+          .from(learnConcept)
+          .where(
+            and(
+              eq(learnConcept.userId, userId),
+              eq(learnConcept.conceptId, item.conceptId),
+            ),
+          )
+          .get();
+
+        if (existing && existing.updatedAt >= item.updatedAt) continue;
+
+        await db
+          .insert(learnConcept)
+          .values({
+            id: item.id,
+            userId,
+            conceptId: item.conceptId,
+            correctCount: item.correctCount,
+            incorrectCount: item.incorrectCount,
+            masteryLevel: item.masteryLevel,
+            nextReviewAt: item.nextReviewAt,
+            updatedAt: item.updatedAt,
+          })
+          .onConflictDoUpdate({
+            target: [learnConcept.userId, learnConcept.conceptId],
+            set: {
+              correctCount: item.correctCount,
+              incorrectCount: item.incorrectCount,
+              masteryLevel: item.masteryLevel,
+              nextReviewAt: item.nextReviewAt,
+              updatedAt: item.updatedAt,
+            },
+          });
+      }
+    }
+
+    // ── Phase 6: Quest progress (LWW + wordsCorrect union) ──
+    if (data.questProgressItems) {
+      for (const item of data.questProgressItems) {
+        const existing = await db
+          .select()
+          .from(questProgress)
+          .where(
+            and(
+              eq(questProgress.userId, userId),
+              eq(questProgress.questId, item.questId),
+            ),
+          )
+          .get();
+
+        if (existing && existing.updatedAt >= item.updatedAt) continue;
+
+        // Union wordsCorrect if server has existing data
+        let wordsCorrectJson = JSON.stringify(item.wordsCorrect);
+        if (existing) {
+          const serverWords: string[] = JSON.parse(existing.wordsCorrect);
+          const merged = Array.from(
+            new Set([...serverWords, ...item.wordsCorrect]),
+          );
+          wordsCorrectJson = JSON.stringify(merged);
+        }
+
+        await db
+          .insert(questProgress)
+          .values({
+            id: item.id,
+            userId,
+            questId: item.questId,
+            wordsCorrect: wordsCorrectJson,
+            totalAttempts: item.totalAttempts,
+            totalCorrect: item.totalCorrect,
+            sessionsCompleted: item.sessionsCompleted,
+            bestSessionScore: item.bestSessionScore,
+            lastPlayedAt: item.lastPlayedAt,
+            updatedAt: item.updatedAt,
+          })
+          .onConflictDoUpdate({
+            target: [questProgress.userId, questProgress.questId],
+            set: {
+              wordsCorrect: wordsCorrectJson,
+              totalAttempts: item.totalAttempts,
+              totalCorrect: item.totalCorrect,
+              sessionsCompleted: item.sessionsCompleted,
+              bestSessionScore: item.bestSessionScore,
+              lastPlayedAt: item.lastPlayedAt,
+              updatedAt: item.updatedAt,
+            },
+          });
+      }
+    }
+
+    // ── Phase 6: Preferences (LWW blob) ──
+    if (data.preferences) {
+      const existing = await db
+        .select({ updatedAt: userPreferences.updatedAt })
+        .from(userPreferences)
+        .where(eq(userPreferences.userId, userId))
+        .get();
+
+      if (!existing || existing.updatedAt < data.preferences.updatedAt) {
+        await db
+          .insert(userPreferences)
+          .values({
+            userId,
+            data: data.preferences.data,
+            updatedAt: data.preferences.updatedAt,
+          })
+          .onConflictDoUpdate({
+            target: userPreferences.userId,
+            set: {
+              data: data.preferences.data,
+              updatedAt: data.preferences.updatedAt,
+            },
+          });
+      }
+    }
+
+    // ── Phase 6: Reading list items (LWW per item + soft delete) ──
+    if (data.readingListItems) {
+      for (const item of data.readingListItems) {
+        const existing = await db
+          .select({ updatedAt: readingListItem.updatedAt })
+          .from(readingListItem)
+          .where(
+            and(
+              eq(readingListItem.userId, userId),
+              eq(readingListItem.type, item.type),
+              eq(readingListItem.itemId, item.itemId),
+            ),
+          )
+          .get();
+
+        if (existing && existing.updatedAt >= item.updatedAt) continue;
+
+        await db
+          .insert(readingListItem)
+          .values({
+            id: item.id,
+            userId,
+            type: item.type,
+            itemId: item.itemId,
+            addedAt: item.addedAt,
+            lastReadAt: item.lastReadAt,
+            deleted: item.deleted ? 1 : 0,
+            updatedAt: item.updatedAt,
+          })
+          .onConflictDoUpdate({
+            target: [
+              readingListItem.userId,
+              readingListItem.type,
+              readingListItem.itemId,
+            ],
+            set: {
+              addedAt: item.addedAt,
+              lastReadAt: item.lastReadAt,
+              deleted: item.deleted ? 1 : 0,
+              updatedAt: item.updatedAt,
+            },
+          });
+      }
+    }
+
+    // ── Phase 6: Reading history (LWW) ──
+    if (data.readingHistoryData) {
+      const existing = await db
+        .select({ updatedAt: readingHistory.updatedAt })
+        .from(readingHistory)
+        .where(eq(readingHistory.userId, userId))
+        .get();
+
+      if (
+        !existing ||
+        existing.updatedAt < data.readingHistoryData.updatedAt
+      ) {
+        await db
+          .insert(readingHistory)
+          .values({
+            userId,
+            lastSurahId: data.readingHistoryData.lastSurahId,
+            lastSurahName: data.readingHistoryData.lastSurahName,
+            lastPageNumber: data.readingHistoryData.lastPageNumber,
+            lastJuzNumber: data.readingHistoryData.lastJuzNumber,
+            updatedAt: data.readingHistoryData.updatedAt,
+          })
+          .onConflictDoUpdate({
+            target: readingHistory.userId,
+            set: {
+              lastSurahId: data.readingHistoryData.lastSurahId,
+              lastSurahName: data.readingHistoryData.lastSurahName,
+              lastPageNumber: data.readingHistoryData.lastPageNumber,
+              lastJuzNumber: data.readingHistoryData.lastJuzNumber,
+              updatedAt: data.readingHistoryData.updatedAt,
+            },
+          });
+      }
+    }
+
     return { ok: true };
   });
+
+// ── Pull ──
 
 export const pullChanges = createServerFn({ method: "GET" })
   .inputValidator((data: { since: number }) => data)
@@ -223,6 +588,59 @@ export const pullChanges = createServerFn({ method: "GET" })
       .select()
       .from(userStats)
       .where(eq(userStats.userId, userId))
+      .get();
+
+    // Phase 6 queries
+    const lessonProgressRows = await db
+      .select()
+      .from(lessonProgress)
+      .where(
+        and(
+          eq(lessonProgress.userId, userId),
+          gt(lessonProgress.updatedAt, data.since),
+        ),
+      );
+
+    const learnConceptRows = await db
+      .select()
+      .from(learnConcept)
+      .where(
+        and(
+          eq(learnConcept.userId, userId),
+          gt(learnConcept.updatedAt, data.since),
+        ),
+      );
+
+    const questProgressRows = await db
+      .select()
+      .from(questProgress)
+      .where(
+        and(
+          eq(questProgress.userId, userId),
+          gt(questProgress.updatedAt, data.since),
+        ),
+      );
+
+    const prefsRow = await db
+      .select()
+      .from(userPreferences)
+      .where(eq(userPreferences.userId, userId))
+      .get();
+
+    const readingListRows = await db
+      .select()
+      .from(readingListItem)
+      .where(
+        and(
+          eq(readingListItem.userId, userId),
+          gt(readingListItem.updatedAt, data.since),
+        ),
+      );
+
+    const readingHistoryRow = await db
+      .select()
+      .from(readingHistory)
+      .where(eq(readingHistory.userId, userId))
       .get();
 
     return {
@@ -267,5 +685,59 @@ export const pullChanges = createServerFn({ method: "GET" })
             updatedAt: statsRow.updatedAt,
           }
         : null,
+      // Phase 6
+      lessonProgressItems: lessonProgressRows.map((r) => ({
+        id: r.id,
+        stageId: r.stageId,
+        lessonId: r.lessonId,
+        status: r.status,
+        score: r.score,
+        sevapPointEarned: r.sevapPointEarned,
+        completedAt: r.completedAt,
+        updatedAt: r.updatedAt,
+      })),
+      learnConcepts: learnConceptRows.map((r) => ({
+        id: r.id,
+        conceptId: r.conceptId,
+        correctCount: r.correctCount,
+        incorrectCount: r.incorrectCount,
+        masteryLevel: r.masteryLevel,
+        nextReviewAt: r.nextReviewAt,
+        updatedAt: r.updatedAt,
+      })),
+      questProgressItems: questProgressRows.map((r) => ({
+        id: r.id,
+        questId: r.questId,
+        wordsCorrect: r.wordsCorrect,
+        totalAttempts: r.totalAttempts,
+        totalCorrect: r.totalCorrect,
+        sessionsCompleted: r.sessionsCompleted,
+        bestSessionScore: r.bestSessionScore,
+        lastPlayedAt: r.lastPlayedAt,
+        updatedAt: r.updatedAt,
+      })),
+      preferences:
+        prefsRow && prefsRow.updatedAt > data.since
+          ? { data: prefsRow.data, updatedAt: prefsRow.updatedAt }
+          : null,
+      readingListItems: readingListRows.map((r) => ({
+        id: r.id,
+        type: r.type,
+        itemId: r.itemId,
+        addedAt: r.addedAt,
+        lastReadAt: r.lastReadAt,
+        deleted: r.deleted,
+        updatedAt: r.updatedAt,
+      })),
+      readingHistoryData:
+        readingHistoryRow && readingHistoryRow.updatedAt > data.since
+          ? {
+              lastSurahId: readingHistoryRow.lastSurahId,
+              lastSurahName: readingHistoryRow.lastSurahName,
+              lastPageNumber: readingHistoryRow.lastPageNumber,
+              lastJuzNumber: readingHistoryRow.lastJuzNumber,
+              updatedAt: readingHistoryRow.updatedAt,
+            }
+          : null,
     };
   });

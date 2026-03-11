@@ -2,6 +2,7 @@ import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 import * as schema from "./schema";
 import * as memorizationSchema from "./memorization-schema";
+import * as syncSchema from "./sync-schema";
 
 const client = createClient({
   url: process.env.TURSO_DATABASE_URL || "file:./local.db",
@@ -9,5 +10,5 @@ const client = createClient({
 });
 
 export const db = drizzle(client, {
-  schema: { ...schema, ...memorizationSchema },
+  schema: { ...schema, ...memorizationSchema, ...syncSchema },
 });

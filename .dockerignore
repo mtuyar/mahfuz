@@ -1,0 +1,14 @@
+node_modules
+dist
+.output
+.git
+.gitignore
+.env
+.env.*
+*.md
+.turbo
+.netlify
+netlify
+.DS_Store
+local.db
+local.db-*

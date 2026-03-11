@@ -126,6 +126,7 @@ export function useLessonSession(lessonId: string, userId: string) {
       score,
       sevapPointEarned,
       completedAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
     // Record concept mastery

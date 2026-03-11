@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "start": "node .output/server/index.mjs",
+    "start": "node server.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/"
   },
@@ -34,7 +34,6 @@
   "devDependencies": {
     "@mahfuz/tailwind-config": "workspace:*",
     "@mahfuz/typescript-config": "workspace:*",
-    "@netlify/vite-plugin-tanstack-start": "^1.0.5",
     "@tailwindcss/vite": "^4.0.0",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",

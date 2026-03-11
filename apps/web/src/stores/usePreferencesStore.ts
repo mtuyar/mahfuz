@@ -265,6 +265,9 @@ interface PreferencesState {
   // Onboarding
   hasSeenOnboarding: boolean;
 
+  // Sync timestamp (for cross-device sync LWW)
+  _syncUpdatedAt: number;
+
   // Setters
   setArabicFont: (id: string) => void;
   setViewMode: (mode: ViewMode) => void;
@@ -290,11 +293,32 @@ interface PreferencesState {
   setShowMemorizeTab: (v: boolean) => void;
   setSidebarCollapsed: (v: boolean) => void;
   setHasSeenOnboarding: (v: boolean) => void;
+  _setSyncUpdatedAt: (v: number) => void;
 }
 
 export const usePreferencesStore = create<PreferencesState>()(
   persist(
-    (set) => ({
+    (rawSet) => {
+      // Wrap set so every user-facing mutation bumps _syncUpdatedAt
+      const set: typeof rawSet = (partial, replace) => {
+        if (typeof partial === "function") {
+          rawSet((state) => {
+            const result = partial(state);
+            // Don't bump _syncUpdatedAt if only _syncUpdatedAt is being set (internal sync)
+            if (result && "_syncUpdatedAt" in result && Object.keys(result).length === 1) {
+              return result;
+            }
+            return { ...result, _syncUpdatedAt: Date.now() };
+          }, replace);
+        } else {
+          if (partial && "_syncUpdatedAt" in partial && Object.keys(partial as object).length === 1) {
+            rawSet(partial, replace);
+          } else {
+            rawSet({ ...(partial as object), _syncUpdatedAt: Date.now() } as typeof partial, replace);
+          }
+        }
+      };
+      return ({
       arabicFontId: "scheherazade-new",
       viewMode: "normal",
       theme: "sepia",
@@ -331,6 +355,9 @@ export const usePreferencesStore = create<PreferencesState>()(
       // Onboarding
       hasSeenOnboarding: false,
 
+      // Sync
+      _syncUpdatedAt: 0,
+
       setArabicFont: (id) => set({ arabicFontId: id }),
       setViewMode: (mode) => set({ viewMode: mode }),
       setTheme: (theme) => set({ theme }),
@@ -363,10 +390,12 @@ export const usePreferencesStore = create<PreferencesState>()(
       setShowMemorizeTab: (v) => set({ showMemorizeTab: v }),
       setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
       setHasSeenOnboarding: (v) => set({ hasSeenOnboarding: v }),
-    }),
+      _setSyncUpdatedAt: (v) => set({ _syncUpdatedAt: v }),
+    });
+    },
     {
       name: "mahfuz-preferences",
-      version: 8,
+      version: 9,
       migrate: (persisted: unknown, version: number) => {
         const state = persisted as Record<string, unknown>;
         if (version === 0 || !version) {
@@ -424,6 +453,9 @@ export const usePreferencesStore = create<PreferencesState>()(
           state.sidebarCollapsed ??= false;
           // Existing users skip onboarding
           state.hasSeenOnboarding = true;
+        }
+        if ((version ?? 0) < 9) {
+          state._syncUpdatedAt ??= 0;
         }
         return state as PreferencesState;
       },

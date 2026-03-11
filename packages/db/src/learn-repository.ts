@@ -1,5 +1,5 @@
 import { db } from "./schema";
-import type { LessonProgressEntry, LearnConceptEntry } from "./schema";
+import type { LessonProgressEntry, LearnConceptEntry, SyncQueueRecord } from "./schema";
 import { MASTERY_INTERVALS } from "@mahfuz/shared/types";
 
 export class LearnRepository {
@@ -32,9 +32,14 @@ export class LearnRepository {
   }
 
   async upsertLessonProgress(entry: LessonProgressEntry): Promise<void> {
-    await db.lesson_progress.put({
+    const record = {
       ...entry,
       id: `${entry.userId}-${entry.lessonId}`,
+      updatedAt: Date.now(),
+    };
+    await db.transaction("rw", db.lesson_progress, db.sync_queue, async () => {
+      await db.lesson_progress.put(record);
+      await this.enqueueSync("lesson_progress", record.id, "upsert", record);
     });
   }
 
@@ -89,9 +94,14 @@ export class LearnRepository {
   }
 
   async upsertConceptMastery(entry: LearnConceptEntry): Promise<void> {
-    await db.learn_concepts.put({
+    const record = {
       ...entry,
       id: `${entry.userId}-${entry.conceptId}`,
+      updatedAt: Date.now(),
+    };
+    await db.transaction("rw", db.learn_concepts, db.sync_queue, async () => {
+      await db.learn_concepts.put(record);
+      await this.enqueueSync("learn_concepts", record.id, "upsert", record);
     });
   }
 
@@ -111,6 +121,7 @@ export class LearnRepository {
       incorrectCount: 0,
       masteryLevel: 0,
       nextReviewAt: 0,
+      updatedAt: 0,
     };
 
     if (isCorrect) {
@@ -141,6 +152,24 @@ export class LearnRepository {
 
   async getAllConcepts(userId: string): Promise<LearnConceptEntry[]> {
     return db.learn_concepts.where("userId").equals(userId).toArray();
+  }
+
+  private async enqueueSync(
+    table: SyncQueueRecord["table"],
+    recordId: string,
+    action: SyncQueueRecord["action"],
+    data: unknown,
+  ): Promise<void> {
+    const record: SyncQueueRecord = {
+      id: crypto.randomUUID(),
+      table,
+      recordId,
+      action,
+      data: JSON.stringify(data),
+      synced: 0,
+      createdAt: Date.now(),
+    };
+    await db.sync_queue.add(record);
   }
 }
 

@@ -8,5 +8,3 @@ local.db
 # Environment
 .env
 
-# Drizzle migrations
-drizzle/

@@ -142,6 +142,36 @@ function StageDetail() {
           );
         })}
       </div>
+
+      {/* Stage Exam Button — only show if not all lessons completed */}
+      {(() => {
+        const allCompleted = stage.lessons.every(
+          (l) => lessonProgress.get(l.id)?.status === "completed",
+        );
+        if (allCompleted) return null;
+
+        return (
+          <div className="mt-6">
+            <Link
+              to="/learn/stage/$stageId/exam"
+              params={{ stageId: String(stageIdNum) }}
+              className="flex items-center justify-between rounded-2xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 p-4 transition-all hover:shadow-[var(--shadow-elevated)] active:scale-[0.99] dark:border-amber-700 dark:from-amber-950/30 dark:to-orange-950/30"
+            >
+              <div>
+                <p className="text-[14px] font-semibold text-amber-800 dark:text-amber-300">
+                  {t.learn.takeExam}
+                </p>
+                <p className="mt-0.5 text-[12px] text-amber-600 dark:text-amber-400/80">
+                  {t.learn.examDesc}
+                </p>
+              </div>
+              <svg className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        );
+      })()}
     </div>
   );
 }

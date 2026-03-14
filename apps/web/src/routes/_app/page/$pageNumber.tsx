@@ -1,9 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
+import { useSuspenseQuery, useQueries, useQueryClient } from "@tanstack/react-query";
 import { useState, useCallback, useRef, useEffect, useMemo, type PointerEvent as ReactPointerEvent } from "react";
 import { versesByPageQueryOptions } from "~/hooks/useVerses";
 import { chaptersQueryOptions } from "~/hooks/useChapters";
 import { chapterAudioQueryOptions } from "~/hooks/useAudio";
+import { wbwByChapterQueryOptions } from "~/hooks/useWbwData";
+import { mergeWbwIntoVerses } from "~/lib/quran-data";
 import { Bismillah, VerseList, ReadingToolbar } from "~/components/quran";
 import { Loading } from "~/components/ui/Loading";
 import { SegmentedControl } from "~/components/ui/SegmentedControl";
@@ -141,8 +143,38 @@ function MushafPageView() {
   const togglePlayPause = useAudioStore((s) => s.togglePlayPause);
 
   const { data: versesData } = useSuspenseQuery(versesByPageQueryOptions(pageNum));
-  const translatedVerses = useTranslatedVerses(versesData.verses);
   const { data: chapters } = useSuspenseQuery(chaptersQueryOptions());
+
+  // WBW data for mushaf mode: load for each surah on this page
+  const surahIdsOnPage = useMemo(() => {
+    const ids = new Set<number>();
+    for (const v of versesData.verses) {
+      ids.add(Number(v.verse_key.split(":")[0]));
+    }
+    return Array.from(ids);
+  }, [versesData.verses]);
+
+  const isMushaf = viewMode === "mushaf" || viewMode === "wordByWord";
+  const wbwQueries = useQueries({
+    queries: surahIdsOnPage.map((chId) => ({
+      ...wbwByChapterQueryOptions(chId),
+      enabled: isMushaf,
+    })),
+  });
+
+  const versesWithWords = useMemo(() => {
+    if (!isMushaf) return versesData.verses;
+    // Merge WBW data from all loaded chapters
+    let merged = versesData.verses;
+    for (const q of wbwQueries) {
+      if (q.data) {
+        merged = mergeWbwIntoVerses(merged, q.data);
+      }
+    }
+    return merged;
+  }, [isMushaf, versesData.verses, wbwQueries]);
+
+  const translatedVerses = useTranslatedVerses(versesWithWords);
 
   useAutoScrollToVerse();
 

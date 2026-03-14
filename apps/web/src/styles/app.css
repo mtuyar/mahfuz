@@ -999,3 +999,51 @@ body {
 [data-theme="crystal"] .animate-pulse-ring {
   animation-name: pulse-ring-blue;
 }
+
+/* ═══ Mushaf word interaction (kelime-meal eşleştirme) ═══ */
+.mushaf-word-interactive {
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 150ms ease;
+}
+.mushaf-word-interactive:hover {
+  background: color-mix(in srgb, var(--mushaf-gold) 15%, transparent);
+}
+.mushaf-word-selected {
+  background: color-mix(in srgb, var(--mushaf-gold) 30%, transparent);
+  border-radius: 4px;
+}
+.mushaf-verse-highlight {
+  background: color-mix(in srgb, var(--mushaf-gold-light) 12%, transparent);
+  border-radius: 8px;
+  padding: 4px 8px;
+  transition: background 300ms ease;
+}
+.mushaf-word-match mark {
+  background: color-mix(in srgb, var(--mushaf-gold) 35%, transparent);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+/* Mushaf tooltip */
+.mushaf-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 10;
+  white-space: nowrap;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--theme-bg-elevated);
+  box-shadow: var(--shadow-elevated);
+  border: 1px solid var(--theme-border);
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+.mushaf-word-interactive:hover > .mushaf-tooltip,
+.mushaf-word-selected > .mushaf-tooltip {
+  opacity: 1;
+}

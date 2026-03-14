@@ -2,11 +2,11 @@
 
 <br>
 
-<img src="apps/web/public/images/mahfuz-logo.png" width="320" alt="Mahfuz — محفوظ">
+<img src="apps/web/public/icons/mahfuz-logo-organic-gold.svg" width="80" alt="Mahfuz — محفوظ">
 
-<br>
+# Mahfuz — محفوظ
 
-A minimal, distraction-free Quran reading experience on the web.
+A minimal, distraction-free Quran companion for the web.
 
 **[mahfuz.ilg.az](https://mahfuz.ilg.az)**
 
@@ -21,9 +21,11 @@ A minimal, distraction-free Quran reading experience on the web.
 Mahfuz is a Quran companion designed around simplicity. No clutter, no ads — just the text and the tools you need to read, listen, learn, and memorize.
 
 - **Three reading modes** — Line-by-line for focused reading, word-by-word with inline translation and transliteration, and a traditional Mushaf page with Karahisari-style illuminated borders in CSS and SVG.
+- **Focus mode** — Distraction-free reading with annotation canvas, gesture navigation, and wake lock.
 - **Audio playback** — Verse or surah-level playback with real-time word highlighting, gapless preloading, reciter selection, adjustable speed, and lock screen controls via MediaSession.
 - **Memorization** — SM-2 spaced repetition, progress tracking per surah and ayah, daily goals, review sessions, and verification exams.
 - **Learn to Read** — 14-stage curriculum from letters to tajweed, with adaptive practice and Quranic word quests.
+- **Library** — Unified hub for courses, learning tracks, and memorization — all in one place.
 - **Offline first** — Three-layer caching: TanStack Query (memory) + Dexie IndexedDB (persistent) + Service Worker (PWA).
 - **Bilingual** — Full Turkish and English interface with auto-detection.
 
@@ -31,19 +33,21 @@ Mahfuz is a Quran companion designed around simplicity. No clutter, no ads — j
 
 | Status | Feature |
 |:------:|---------|
-| ✅ | Reading — Three view modes, topic index, command palette |
-| ✅ | Audio — Verse-level playback with word-level sync |
-| ✅ | Offline — PWA with stale-while-revalidate caching |
-| ✅ | Authentication — Better Auth with cookie sessions |
-| ✅ | Memorization — Spaced repetition with SM-2 |
-| ✅ | Learn — 14-stage curriculum with side quests |
-| ✅ | i18n — Turkish and English |
-| ✅ | Gamification — Achievement badges |
-| ✅ | Performance — Virtualization, memoization, lazy loading |
-| 🔜 | Sync — Cross-device progress sync |
-| 🔜 | Share & SEO — Social sharing, calligraphy cards, deep links |
-| 🔜 | Mobile — Native Android and iOS apps |
-| 🔜 | @mahfuz/sdk — Public npm package for Quran data |
+| Done | Reading — Three view modes, topic index, command palette |
+| Done | Focus — Distraction-free reading with annotations |
+| Done | Audio — Verse-level playback with word-level sync |
+| Done | Offline — PWA with stale-while-revalidate caching |
+| Done | Authentication — Better Auth with cookie sessions |
+| Done | Memorization — Spaced repetition with SM-2 |
+| Done | Learn — 14-stage curriculum with side quests |
+| Done | Library — Unified courses, tracks, and memorization |
+| Done | i18n — Turkish and English |
+| Done | Gamification — Achievement badges |
+| Done | Performance — Virtualization, memoization, lazy loading |
+| Next | Sync — Cross-device progress sync |
+| Next | Share & SEO — Social sharing, calligraphy cards, deep links |
+| Next | Mobile — Native Android and iOS apps |
+| Next | @mahfuz/sdk — Public npm package for Quran data |
 
 ## Getting Started
 
@@ -76,10 +80,10 @@ Dev server runs at `http://localhost:3000`.
 | Data | TanStack Query + TanStack Virtual |
 | Styling | Tailwind CSS v4 |
 | Build | Vite 7 + Turborepo |
-| State | Zustand |
+| State | Zustand (16 focused stores) |
 | Database | Dexie v4 (IndexedDB) + Drizzle ORM + LibSQL |
 | Auth | Better Auth v1.5 |
-| Deploy | Docker (Node.js SSR via Dokploy) |
+| Deploy | Docker (Node.js SSR) |
 | Package manager | pnpm 9 |
 
 ## Project Structure
@@ -88,12 +92,15 @@ Dev server runs at `http://localhost:3000`.
 mahfuz-app/
 ├── apps/
 │   └── web/                      Main web application
+│       ├── server.mjs            Node.js SSR server
+│       ├── drizzle/              Database migrations
 │       └── src/
-│           ├── components/       UI components (quran, ui, learn, memorization, audio)
-│           ├── hooks/            Custom hooks (useChapters, useAudio, useLearn, etc.)
+│           ├── components/       UI components (quran, browse, audio, focus, library, settings, learn, memorization)
+│           ├── hooks/            Custom hooks + query/mutation hooks
 │           ├── locales/          i18n strings (tr.ts, en.ts)
-│           ├── routes/           File-based routes (~35 routes)
-│           └── stores/           Zustand stores (7 stores)
+│           ├── lib/              Utilities, constants, store helpers
+│           ├── routes/           File-based routes (32 routes)
+│           └── stores/           Zustand stores (16 focused stores)
 ├── packages/
 │   ├── api/                      Quran.com API client with IndexedDB cache
 │   ├── audio-engine/             Playback engine with word-level sync

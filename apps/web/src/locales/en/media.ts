@@ -18,7 +18,9 @@ export const media = {
     expand: "Expand",
     collapse: "Collapse",
     changeReciter: "Change Reciter",
+    autoContinue: "Auto-play Next Surah",
     listenSurah: "Listen to Surah",
+    goToVerse: "Go to playing verse",
   },
 
   playlist: {

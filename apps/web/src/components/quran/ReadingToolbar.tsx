@@ -310,6 +310,8 @@ export function ReadingToolbar({ segmentStyle }: { segmentStyle?: boolean } = {}
   const setNormalTranslationFontSize = usePreferencesStore((s) => s.setNormalTranslationFontSize);
   const mushafTranslationFontSize = usePreferencesStore((s) => s.mushafTranslationFontSize);
   const setMushafTranslationFontSize = usePreferencesStore((s) => s.setMushafTranslationFontSize);
+  const mushafTooltipTextSize = usePreferencesStore((s) => s.mushafTooltipTextSize);
+  const setMushafTooltipTextSize = usePreferencesStore((s) => s.setMushafTooltipTextSize);
   const normalShowTranslation = usePreferencesStore((s) => s.normalShowTranslation);
   const setNormalShowTranslation = usePreferencesStore((s) => s.setNormalShowTranslation);
   const normalShowWordHover = usePreferencesStore((s) => s.normalShowWordHover);
@@ -333,12 +335,16 @@ export function ReadingToolbar({ segmentStyle }: { segmentStyle?: boolean } = {}
   const wbwTransliterationFirst = usePreferencesStore((s) => s.wbwTransliterationFirst);
   const setWbwTransliterationFirst = usePreferencesStore((s) => s.setWbwTransliterationFirst);
 
+  const globalFontScale = usePreferencesStore((s) => s.globalFontScale);
+  const adjustGlobalFontScale = usePreferencesStore((s) => s.adjustGlobalFontScale);
+  const setGlobalFontScale = usePreferencesStore((s) => s.setGlobalFontScale);
+
   const arabicSize = viewMode === "wordByWord" ? wbwArabicFontSize : viewMode === "mushaf" ? mushafArabicFontSize : normalArabicFontSize;
   const setArabicSize = viewMode === "wordByWord" ? setWbwArabicFontSize : viewMode === "mushaf" ? setMushafArabicFontSize : setNormalArabicFontSize;
 
   const modeOptions = getModeOptions(t);
 
-  // Quick font size adjust
+  // Quick font size adjust (per-mode)
   const bump = (delta: number) => {
     const next = Math.max(0.6, Math.min(5.0, arabicSize + delta));
     setArabicSize(next);
@@ -379,9 +385,28 @@ export function ReadingToolbar({ segmentStyle }: { segmentStyle?: boolean } = {}
 
       {/* Scrollable settings area */}
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-20 lg:pb-5">
+      {/* Global font scale strip */}
+      <div className="mb-3 flex items-center justify-between rounded-xl bg-[var(--theme-pill-bg)] px-3 py-2">
+        <span className="text-[12px] font-medium text-[var(--theme-text-secondary)]">{t.toolbar.fontScale}</span>
+        <div className="flex items-center gap-1.5">
+          <button onClick={() => adjustGlobalFontScale(-0.1)} className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--theme-text-secondary)] transition-colors hover:bg-[var(--theme-hover-bg)]" aria-label={t.toolbar.fontScaleDecrease}>
+            <span className="text-[14px] font-bold">−</span>
+          </button>
+          <button
+            onClick={() => setGlobalFontScale(1)}
+            className="rounded-lg px-2 py-0.5 text-[11px] font-semibold tabular-nums text-[var(--theme-text-tertiary)] transition-colors hover:bg-[var(--theme-hover-bg)]"
+          >
+            {Math.round(globalFontScale * 100)}%
+          </button>
+          <button onClick={() => adjustGlobalFontScale(0.1)} className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--theme-text-secondary)] transition-colors hover:bg-[var(--theme-hover-bg)]" aria-label={t.toolbar.fontScaleIncrease}>
+            <span className="text-[14px] font-bold">+</span>
+          </button>
+        </div>
+      </div>
+
       {/* Quick access row */}
       <div className="mb-3 flex items-center gap-2 rounded-xl bg-[var(--theme-pill-bg)] px-3 py-2">
-        {/* Font size −/+ */}
+        {/* Font size −/+ (per-mode) */}
         <button onClick={() => bump(-0.1)} className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--theme-text-secondary)] transition-colors hover:bg-[var(--theme-hover-bg)]" aria-label={t.toolbar.decreaseSize}>
           <span className="text-[13px] font-bold">A-</span>
         </button>
@@ -504,7 +529,16 @@ export function ReadingToolbar({ segmentStyle }: { segmentStyle?: boolean } = {}
             </>
           )}
           {viewMode === "mushaf" && (
-            <p className="text-[12px] text-[var(--theme-text-quaternary)]">{t.toolbar.mushafNote}</p>
+            <>
+              <p className="text-[12px] text-[var(--theme-text-quaternary)]">{t.toolbar.mushafNote}</p>
+              <div className="mt-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[12px] text-[var(--theme-text-tertiary)]">{t.toolbar.mushafTooltipSize}</span>
+                  <span className="text-[11px] tabular-nums text-[var(--theme-text-quaternary)]">%{Math.round(mushafTooltipTextSize * 100)}</span>
+                </div>
+                <CompactSlider value={mushafTooltipTextSize} onChange={setMushafTooltipTextSize} />
+              </div>
+            </>
           )}
         </CategorySection>
 

@@ -33,6 +33,8 @@ export function AudioBar() {
   const volume = useAudioStore((s) => s.volume);
   const isMuted = useAudioStore((s) => s.isMuted);
 
+  const autoContinue = useAudioStore((s) => s.autoContinue);
+
   const togglePlayPause = useAudioStore((s) => s.togglePlayPause);
   const nextVerse = useAudioStore((s) => s.nextVerse);
   const prevVerse = useAudioStore((s) => s.prevVerse);
@@ -42,6 +44,7 @@ export function AudioBar() {
   const setRepeatMode = useAudioStore((s) => s.setRepeatMode);
   const setVolume = useAudioStore((s) => s.setVolume);
   const toggleMute = useAudioStore((s) => s.toggleMute);
+  const setAutoContinue = useAudioStore((s) => s.setAutoContinue);
   const setExpanded = useAudioStore((s) => s.setExpanded);
   const setReciter = useAudioStore((s) => s.setReciter);
   const playSurah = useAudioStore((s) => s.playSurah);
@@ -86,6 +89,10 @@ export function AudioBar() {
         }
       } catch (err) {
         console.error("[AudioBar] Failed to change reciter:", err);
+        // Stop stale playback — the new reciter has no audio for this chapter
+        const engine = useAudioStore.getState().engine;
+        engine?.stop();
+        useAudioStore.setState({ playbackState: "idle", isVisible: false });
       }
     },
     [queryClient, setReciter, playVerse, playSurah],
@@ -202,6 +209,27 @@ export function AudioBar() {
               </div>
             </div>
 
+            {/* Auto-continue */}
+            <button
+              onClick={() => setAutoContinue(!autoContinue)}
+              className="mt-4 flex w-full items-center justify-between rounded-xl bg-[var(--theme-speed-inactive-bg)] px-4 py-2.5 transition-colors hover:bg-[var(--theme-speed-inactive-hover)]"
+            >
+              <span className="text-[13px] font-medium text-[var(--theme-text)]">
+                {t.audio.autoContinue}
+              </span>
+              <span
+                className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+                  autoContinue ? "bg-primary-600" : "bg-[var(--theme-border)]"
+                }`}
+              >
+                <span
+                  className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform ${
+                    autoContinue ? "translate-x-[18px]" : "translate-x-[3px]"
+                  }`}
+                />
+              </span>
+            </button>
+
             {/* Volume */}
             <div className="mt-4 flex items-center gap-3">
               <button
@@ -253,11 +281,13 @@ export function AudioBar() {
 
         <div className="border-t border-[var(--theme-border)] px-3 py-1.5">
           <div className="flex items-center gap-3">
-            {/* Info: tap to navigate to surah */}
+            {/* Info: tap to navigate to the active verse */}
             <Link
               to="/$surahId"
               params={{ surahId: String(chapterId) }}
+              search={{ verse: currentVerseKey && currentVerseKey !== "bismillah" ? Number(currentVerseKey.split(":")[1]) : undefined }}
               className="min-w-0 flex-1"
+              aria-label={t.audio.goToVerse}
             >
               <p className="truncate text-[13px] font-medium text-[var(--theme-text)]">
                 {chapterName}

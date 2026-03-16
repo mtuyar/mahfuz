@@ -16,7 +16,6 @@ import { getJuzForPage } from "@mahfuz/shared";
 import { usePreferencesStore } from "~/stores/usePreferencesStore";
 import type { ViewMode } from "~/stores/usePreferencesStore";
 import { useAudioStore } from "~/stores/useAudioStore";
-import { useAutoScrollToVerse } from "~/hooks/useAutoScrollToVerse";
 import type { Chapter } from "@mahfuz/shared/types";
 import type { ChapterAudioData } from "@mahfuz/audio-engine";
 import { useReadingHistory } from "~/stores/useReadingHistory";
@@ -135,9 +134,8 @@ function SurahView() {
   );
   const translatedVerses = useTranslatedVerses(versesWithWords);
 
-  useAutoScrollToVerse();
-
   // Scroll to verse from ?verse= search param is handled by VerseList's scrollToVerse prop
+  // Audio auto-scroll is handled inside VirtualizedVerseList (uses virtualizer.scrollToIndex)
 
   // Lookup topic by composite key (e.g. "inanc:3")
   const resolvedTopic = useMemo(() => {

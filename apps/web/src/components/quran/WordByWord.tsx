@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState, useCallback, useEffect, useRef } from "react";
 import type { Word } from "@mahfuz/shared/types";
 import { usePreferencesStore } from "~/stores/usePreferencesStore";
 import { useShallow } from "zustand/react/shallow";
@@ -24,7 +24,27 @@ export const WordByWord = memo(function WordByWord({
     transliterationSize: s.wordTransliterationSize,
     transliterationFirst: s.wbwTransliterationFirst,
     wbwArabicFontSize: s.wbwArabicFontSize,
+    wbwPopupTextSize: s.wbwPopupTextSize,
   })));
+
+  const [selectedWordId, setSelectedWordId] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleWordClick = useCallback((wordId: number) => {
+    setSelectedWordId((prev) => (prev === wordId ? null : wordId));
+  }, []);
+
+  // Close popup when clicking outside
+  useEffect(() => {
+    if (selectedWordId === null) return;
+    function onPointerDown(e: PointerEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setSelectedWordId(null);
+      }
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [selectedWordId]);
 
   const wordItems = words.filter((w) => w.char_type_name === "word");
 
@@ -34,10 +54,12 @@ export const WordByWord = memo(function WordByWord({
       : {};
 
   return (
-    <div className="flex flex-wrap justify-end gap-x-5 gap-y-4">
+    <div ref={containerRef} className="flex flex-wrap justify-end gap-x-5 gap-y-4">
       {wordItems.map((word, i) => {
         const isActive =
           activeWordPosition != null && word.position === activeWordPosition;
+        const isSelected = selectedWordId === word.id;
+        const hasPopup = word.translation?.text || word.transliteration?.text;
 
         const translationEl = prefs.showTranslation && (
           <span
@@ -72,9 +94,10 @@ export const WordByWord = memo(function WordByWord({
         return (
           <div
             key={word.id}
-            className={`flex flex-col items-center gap-1 rounded-xl px-2 py-1.5 transition-colors ${
+            className={`relative flex flex-col items-center gap-1 rounded-xl px-2 py-1.5 transition-colors ${
               isActive ? "" : "hover:bg-[var(--theme-pill-bg)]"
-            }`}
+            } ${isSelected ? "bg-[var(--theme-pill-bg)]" : ""}`}
+            onClick={() => handleWordClick(word.id)}
           >
             <span
               className={`word-highlight arabic-text cursor-pointer ${isActive ? "active" : ""}`}
@@ -93,6 +116,23 @@ export const WordByWord = memo(function WordByWord({
               <>{transliterationEl}{translationEl}</>
             ) : (
               <>{translationEl}{transliterationEl}</>
+            )}
+
+            {/* Tap-to-select popup */}
+            {isSelected && hasPopup && (
+              <span className="absolute bottom-full left-1/2 z-30 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-lg bg-[var(--theme-bg-elevated)] px-3 py-2 shadow-[var(--shadow-float)]">
+                {word.translation?.text && (
+                  <span className="block font-sans font-medium text-[var(--theme-text)]" style={{ fontSize: `calc(12px * ${prefs.wbwPopupTextSize})` }}>
+                    {word.translation.text}
+                  </span>
+                )}
+                {word.transliteration?.text && (
+                  <span className="block font-sans italic text-[var(--theme-text-tertiary)]" style={{ fontSize: `calc(11px * ${prefs.wbwPopupTextSize})` }}>
+                    {word.transliteration.text}
+                  </span>
+                )}
+                <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[var(--theme-bg-elevated)]" />
+              </span>
             )}
           </div>
         );

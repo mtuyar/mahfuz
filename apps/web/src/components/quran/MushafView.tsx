@@ -25,6 +25,7 @@ export function MushafView({ verses, showBismillah = true }: MushafViewProps) {
   const colors = getActiveColors({ colorPaletteId });
   const mushafArabicFontSize = usePreferencesStore((s) => s.mushafArabicFontSize);
   const mushafTranslationFontSize = usePreferencesStore((s) => s.mushafTranslationFontSize);
+  const mushafTooltipTextSize = usePreferencesStore((s) => s.mushafTooltipTextSize);
   const selectedTranslations = usePreferencesStore((s) => s.selectedTranslations);
   const { t } = useTranslation();
 
@@ -51,6 +52,7 @@ export function MushafView({ verses, showBismillah = true }: MushafViewProps) {
           colorizeWords={colorizeWords}
           colors={colors}
           fontSize={mushafArabicFontSize}
+          tooltipTextSize={mushafTooltipTextSize}
           selectedWord={selectedWord}
           onSelectWord={setSelectedWord}
         />
@@ -96,6 +98,7 @@ function ArabicPage({
   colorizeWords: boolean;
   colors: string[];
   fontSize: number;
+  tooltipTextSize: number;
   selectedWord: SelectedWord | null;
   onSelectWord: (word: SelectedWord | null) => void;
 }) {
@@ -157,12 +160,12 @@ function ArabicPage({
                       {hasTooltip && (
                         <span className={`mushaf-tooltip ${isSelected ? "!opacity-100" : ""}`}>
                           {w.translation?.text && (
-                            <span className="block text-[11px] font-medium text-[var(--theme-text)]">
+                            <span className="block font-medium text-[var(--theme-text)]" style={{ fontSize: `calc(11px * ${tooltipTextSize})` }}>
                               {w.translation.text}
                             </span>
                           )}
                           {w.transliteration?.text && (
-                            <span className="block text-[10px] italic text-[var(--theme-text-tertiary)]">
+                            <span className="block italic text-[var(--theme-text-tertiary)]" style={{ fontSize: `calc(10px * ${tooltipTextSize})` }}>
                               {w.transliteration.text}
                             </span>
                           )}

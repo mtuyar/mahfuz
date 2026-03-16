@@ -29,6 +29,7 @@ export const ARABIC_FONTS: ArabicFont[] = [
   { id: "uthmani-hafs", name: "Uthmani Hafs", family: '"KFGQPC Uthmani Hafs"', source: "local", group: "mushaf", desc: "Mushaf geleneğine sadık dijital bir hat." },
   { id: "amiri-quran", name: "Amiri Quran", family: '"Amiri Quran"', source: "google", googleUrl: "https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap", group: "mushaf", desc: "Mushaf baskılarına uygun özel tasarım." },
   { id: "me-quran", name: "Me Quran", family: '"me_quran"', source: "local", group: "mushaf", desc: "Medine Mushafı'na sadık özel bir tasarım." },
+  { id: "uthman-taha-naskh", name: "Uthman Taha Naskh", family: '"KFGQPC Uthman Taha Naskh"', source: "local", group: "naskh", desc: "Kral Fahd Mushaf Basımevi'nin Osman Taha hattına sadık Nesih tasarımı." },
   { id: "scheherazade-new", name: "Scheherazade New", family: '"Scheherazade New"', source: "local", group: "naskh", desc: "Nesih geleneğinden beslenen zarif bir tasarım." },
   { id: "amiri", name: "Amiri", family: '"Amiri"', source: "google", googleUrl: "https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap", group: "naskh", desc: "Mısır Bulak matbaasının ruhunu taşıyan klasik Nesih." },
   { id: "lateef", name: "Lateef", family: '"Lateef"', source: "google", googleUrl: "https://fonts.googleapis.com/css2?family=Lateef:wght@400;700&display=swap", group: "naskh", desc: "Nastaliq etkili zarif bir Nesih hattı." },

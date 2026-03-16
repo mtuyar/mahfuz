@@ -57,6 +57,8 @@ interface ReadingModeSectionProps {
   onMushafArabicSizeChange: (v: number) => void;
   mushafTranslationFontSize: number;
   onMushafTranslationSizeChange: (v: number) => void;
+  mushafTooltipTextSize: number;
+  onMushafTooltipTextSizeChange: (v: number) => void;
 }
 
 export function ReadingModeSection({
@@ -84,6 +86,8 @@ export function ReadingModeSection({
   onMushafArabicSizeChange,
   mushafTranslationFontSize,
   onMushafTranslationSizeChange,
+  mushafTooltipTextSize,
+  onMushafTooltipTextSizeChange,
 }: ReadingModeSectionProps) {
   const { t } = useTranslation();
 
@@ -134,6 +138,8 @@ export function ReadingModeSection({
             onArabicSizeChange={onMushafArabicSizeChange}
             translationFontSize={mushafTranslationFontSize}
             onTranslationSizeChange={onMushafTranslationSizeChange}
+            tooltipTextSize={mushafTooltipTextSize}
+            onTooltipTextSizeChange={onMushafTooltipTextSizeChange}
             colorizeWords={colorizeWords}
             colors={colors}
             textType={textType}
@@ -460,6 +466,8 @@ function MushafTabContent({
   onArabicSizeChange,
   translationFontSize,
   onTranslationSizeChange,
+  tooltipTextSize,
+  onTooltipTextSizeChange,
   colorizeWords,
   colors,
   textType,
@@ -469,6 +477,8 @@ function MushafTabContent({
   onArabicSizeChange: (v: number) => void;
   translationFontSize: number;
   onTranslationSizeChange: (v: number) => void;
+  tooltipTextSize: number;
+  onTooltipTextSizeChange: (v: number) => void;
   colorizeWords: boolean;
   colors: string[];
   textType: string;
@@ -545,6 +555,24 @@ function MushafTabContent({
             type="range" min="0.6" max="5.0" step="0.05"
             value={translationFontSize}
             onChange={(e) => onTranslationSizeChange(Number(e.target.value))}
+            className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-[var(--theme-border)] accent-primary-600"
+          />
+          <span className="text-lg text-[var(--theme-text-tertiary)]">A</span>
+        </div>
+      </div>
+
+      {/* Tooltip text size slider */}
+      <div className="mt-5">
+        <div className="flex items-center justify-between">
+          <span className="text-[13px] font-medium text-[var(--theme-text)]">{t.toolbar.mushafTooltipSize}</span>
+          <span className="text-[12px] tabular-nums text-[var(--theme-text-tertiary)]">%{Math.round(tooltipTextSize * 100)}</span>
+        </div>
+        <div className="mt-2 flex items-center gap-3">
+          <span className="text-xs text-[var(--theme-text-tertiary)]">A</span>
+          <input
+            type="range" min="0.6" max="5.0" step="0.05"
+            value={tooltipTextSize}
+            onChange={(e) => onTooltipTextSizeChange(Number(e.target.value))}
             className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-[var(--theme-border)] accent-primary-600"
           />
           <span className="text-lg text-[var(--theme-text-tertiary)]">A</span>

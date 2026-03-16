@@ -18,7 +18,9 @@ export const media = {
     expand: "Genişlet",
     collapse: "Küçült",
     changeReciter: "Kârî Değiştir",
+    autoContinue: "Sonraki Sureye Geç",
     listenSurah: "Sureyi Dinle",
+    goToVerse: "Aktif ayete git",
   },
 
   playlist: {

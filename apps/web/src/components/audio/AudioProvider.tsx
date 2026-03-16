@@ -1,5 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAudioStore } from "~/stores/useAudioStore";
+import type { FetchChapterAudioFn } from "~/stores/useAudioStore";
+import { chapterAudioQueryOptions } from "~/hooks/useAudio";
+import { chaptersQueryOptions } from "~/hooks/useChapters";
+import type { ChapterAudioData } from "@mahfuz/audio-engine";
 
 /**
  * Renderless component that initializes AudioEngine on mount
@@ -15,6 +20,40 @@ export function AudioProvider() {
   const onWordPositionChange = useAudioStore((s) => s._onWordPositionChange);
   const onVerseChange = useAudioStore((s) => s._onVerseChange);
   const onVerseEnd = useAudioStore((s) => s._onVerseEnd);
+  const setFetchFn = useAudioStore((s) => s._setFetchChapterAudioFn);
+
+  const queryClient = useQueryClient();
+
+  // Wire the auto-continue fetch function so the store can fetch next chapter audio
+  const fetchChapterAudio: FetchChapterAudioFn = useCallback(
+    async (reciterId, chapterId) => {
+      const qdcFile = await queryClient.fetchQuery(
+        chapterAudioQueryOptions(reciterId, chapterId),
+      );
+      const audioData: ChapterAudioData = {
+        audioUrl: qdcFile.audio_url,
+        verseTimings: qdcFile.verse_timings.map((t) => ({
+          verseKey: t.verse_key,
+          from: t.timestamp_from,
+          to: t.timestamp_to,
+          segments: t.segments,
+        })),
+      };
+
+      // Get chapter name from cached chapters data
+      const chapters = await queryClient.fetchQuery(chaptersQueryOptions());
+      const chapter = chapters.find((c) => c.id === chapterId);
+      const chapterName = chapter?.translated_name.name ?? `Surah ${chapterId}`;
+
+      return { audioData, chapterName };
+    },
+    [queryClient],
+  );
+
+  useEffect(() => {
+    setFetchFn(fetchChapterAudio);
+    return () => setFetchFn(null);
+  }, [fetchChapterAudio, setFetchFn]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

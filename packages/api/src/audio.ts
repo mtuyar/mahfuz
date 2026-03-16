@@ -50,7 +50,15 @@ export class AudioApi {
 
     // Use client's cache adapter if available
     const cached = await this.client.getCached<QDCAudioResponse>(cacheKey, CACHE_TTL.AUDIO);
-    if (cached) return cached.audio_files[0];
+    if (cached) {
+      if (!cached.audio_files || cached.audio_files.length === 0) {
+        throw {
+          status: 404,
+          message: `No audio available for reciter ${reciterId}, chapter ${chapterId}`,
+        };
+      }
+      return cached.audio_files[0];
+    }
 
     const response = await fetch(url, {
       method: "GET",
@@ -65,6 +73,14 @@ export class AudioApi {
     }
 
     const data = (await response.json()) as QDCAudioResponse;
+
+    if (!data.audio_files || data.audio_files.length === 0) {
+      throw {
+        status: 404,
+        message: `No audio available for reciter ${reciterId}, chapter ${chapterId}`,
+      };
+    }
+
     await this.client.setCached(cacheKey, data);
     return data.audio_files[0];
   }

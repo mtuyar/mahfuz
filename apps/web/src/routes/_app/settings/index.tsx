@@ -63,6 +63,8 @@ function SettingsPage() {
   const setWbwArabicFontSize = usePreferencesStore((s) => s.setWbwArabicFontSize);
   const setMushafArabicFontSize = usePreferencesStore((s) => s.setMushafArabicFontSize);
   const setMushafTranslationFontSize = usePreferencesStore((s) => s.setMushafTranslationFontSize);
+  const mushafTooltipTextSize = usePreferencesStore((s) => s.mushafTooltipTextSize);
+  const setMushafTooltipTextSize = usePreferencesStore((s) => s.setMushafTooltipTextSize);
 
   const wbwShowWordTranslation = usePreferencesStore((s) => s.wbwShowWordTranslation);
   const wbwShowWordTransliteration = usePreferencesStore((s) => s.wbwShowWordTransliteration);
@@ -182,6 +184,8 @@ function SettingsPage() {
             onMushafArabicSizeChange={setMushafArabicFontSize}
             mushafTranslationFontSize={mushafTranslationFontSize}
             onMushafTranslationSizeChange={setMushafTranslationFontSize}
+            mushafTooltipTextSize={mushafTooltipTextSize}
+            onMushafTooltipTextSizeChange={setMushafTooltipTextSize}
           />
         );
       case "langNav":

@@ -123,15 +123,44 @@ export class AudioEngine {
   }
 
   async play(startIndex?: number): Promise<void> {
-    if (this.totalVerses === 0) return;
-
     if (this._chapterMode) {
+      // Allow playback even with no verse timings (audio still plays, just no verse sync)
+      if (this.totalVerses === 0 && !this.audio.src) return;
       return this.playChapterMode(startIndex);
     }
+    if (this.totalVerses === 0) return;
     return this.playVerseMode(startIndex);
   }
 
   private async playChapterMode(startIndex?: number): Promise<void> {
+    // No verse timings — play raw audio from the beginning (no verse sync)
+    if (this._chapterTimings.length === 0) {
+      if (!this.audio.src) return;
+
+      // If paused, just resume
+      if (this.audio.paused && this.audio.currentTime > 0) {
+        try {
+          await this.audio.play();
+          this.callbacks.onPlaybackStateChange("playing");
+          this.startWordSync();
+        } catch (err) {
+          this.callbacks.onError(err instanceof Error ? err : new Error(String(err)));
+        }
+        return;
+      }
+
+      this.audio.currentTime = 0;
+      try {
+        this.callbacks.onPlaybackStateChange("loading");
+        await this.audio.play();
+        this.callbacks.onPlaybackStateChange("playing");
+        this.startWordSync();
+      } catch (err) {
+        this.callbacks.onError(err instanceof Error ? err : new Error(String(err)));
+      }
+      return;
+    }
+
     const idx = startIndex ?? (this.currentIndex >= 0 ? this.currentIndex : 0);
 
     // If resuming (no startIndex, same index, audio paused), just resume

@@ -48,6 +48,9 @@ interface PreferencesState {
   wbwArabicFontSize: number;
   mushafArabicFontSize: number;
   mushafTranslationFontSize: number;
+  mushafTooltipTextSize: number;
+  wbwPopupTextSize: number;
+  globalFontScale: number;
   textType: "uthmani" | "simple";
   showLearnTab: boolean;
   showMemorizeTab: boolean;
@@ -77,6 +80,10 @@ interface PreferencesState {
   setWbwArabicFontSize: (size: number) => void;
   setMushafArabicFontSize: (size: number) => void;
   setMushafTranslationFontSize: (size: number) => void;
+  setMushafTooltipTextSize: (size: number) => void;
+  setWbwPopupTextSize: (size: number) => void;
+  setGlobalFontScale: (scale: number) => void;
+  adjustGlobalFontScale: (delta: number) => void;
   setTextType: (t: "uthmani" | "simple") => void;
   setShowLearnTab: (v: boolean) => void;
   setShowMemorizeTab: (v: boolean) => void;
@@ -109,6 +116,9 @@ export const usePreferencesStore = create<PreferencesState>()(
       wbwArabicFontSize: 1,
       mushafArabicFontSize: 1,
       mushafTranslationFontSize: 1,
+      mushafTooltipTextSize: 1,
+      wbwPopupTextSize: 1,
+      globalFontScale: 1,
       textType: "uthmani",
       showLearnTab: true,
       showMemorizeTab: true,
@@ -146,6 +156,38 @@ export const usePreferencesStore = create<PreferencesState>()(
       setWbwArabicFontSize: (size) => set({ wbwArabicFontSize: size }),
       setMushafArabicFontSize: (size) => set({ mushafArabicFontSize: size }),
       setMushafTranslationFontSize: (size) => set({ mushafTranslationFontSize: size }),
+      setMushafTooltipTextSize: (size) => set({ mushafTooltipTextSize: size }),
+      setWbwPopupTextSize: (size) => set({ wbwPopupTextSize: size }),
+      setGlobalFontScale: (scale) => {
+        const s = get();
+        const ratio = scale / s.globalFontScale;
+        set({
+          globalFontScale: scale,
+          normalArabicFontSize: Math.max(0.6, Math.min(5, s.normalArabicFontSize * ratio)),
+          normalTranslationFontSize: Math.max(0.6, Math.min(5, s.normalTranslationFontSize * ratio)),
+          wbwArabicFontSize: Math.max(0.6, Math.min(5, s.wbwArabicFontSize * ratio)),
+          mushafArabicFontSize: Math.max(0.6, Math.min(5, s.mushafArabicFontSize * ratio)),
+          mushafTranslationFontSize: Math.max(0.6, Math.min(5, s.mushafTranslationFontSize * ratio)),
+          wordTranslationSize: Math.max(0.6, Math.min(5, s.wordTranslationSize * ratio)),
+          wordTransliterationSize: Math.max(0.6, Math.min(5, s.wordTransliterationSize * ratio)),
+        });
+      },
+      adjustGlobalFontScale: (delta) => {
+        const s = get();
+        const next = Math.max(0.6, Math.min(3, s.globalFontScale + delta));
+        if (next === s.globalFontScale) return;
+        const ratio = next / s.globalFontScale;
+        set({
+          globalFontScale: next,
+          normalArabicFontSize: Math.max(0.6, Math.min(5, s.normalArabicFontSize * ratio)),
+          normalTranslationFontSize: Math.max(0.6, Math.min(5, s.normalTranslationFontSize * ratio)),
+          wbwArabicFontSize: Math.max(0.6, Math.min(5, s.wbwArabicFontSize * ratio)),
+          mushafArabicFontSize: Math.max(0.6, Math.min(5, s.mushafArabicFontSize * ratio)),
+          mushafTranslationFontSize: Math.max(0.6, Math.min(5, s.mushafTranslationFontSize * ratio)),
+          wordTranslationSize: Math.max(0.6, Math.min(5, s.wordTranslationSize * ratio)),
+          wordTransliterationSize: Math.max(0.6, Math.min(5, s.wordTransliterationSize * ratio)),
+        });
+      },
       setTextType: (t) => set({ textType: t }),
       setShowLearnTab: (v) => set({ showLearnTab: v }),
       setShowMemorizeTab: (v) => set({ showMemorizeTab: v }),

@@ -5,6 +5,7 @@ import { AyahText } from "./AyahText";
 import { Bismillah } from "./Bismillah";
 import { MushafView } from "./MushafView";
 import { usePreferencesStore } from "~/stores/usePreferencesStore";
+import { useAudioStore } from "~/stores/useAudioStore";
 
 /** Surahs that do NOT get a Bismillah prefix (Al-Fatiha has it as verse 1, At-Tawbah has none) */
 const NO_BISMILLAH_SURAHS = new Set([1, 9]);
@@ -84,6 +85,20 @@ function VirtualizedVerseList({
       });
     }
   }, [scrollToVerse, verses, virtualizer]);
+
+  // Auto-scroll to the currently playing verse (audio tracking)
+  const currentVerseKey = useAudioStore((s) => s.currentVerseKey);
+  const playbackState = useAudioStore((s) => s.playbackState);
+
+  useEffect(() => {
+    if (!currentVerseKey || playbackState !== "playing") return;
+    const index = verses.findIndex((v) => v.verse_key === currentVerseKey);
+    if (index >= 0) {
+      requestAnimationFrame(() => {
+        virtualizer.scrollToIndex(index, { align: "center", behavior: "smooth" });
+      });
+    }
+  }, [currentVerseKey, playbackState, verses, virtualizer]);
 
   const measureRef = useCallback(
     (node: HTMLDivElement | null) => {

@@ -14,7 +14,6 @@ import { getJuzForPage, getAllJuzRanges } from "@mahfuz/shared";
 import { usePreferencesStore } from "~/stores/usePreferencesStore";
 import type { ViewMode } from "~/stores/usePreferencesStore";
 import { useAudioStore } from "~/stores/useAudioStore";
-import { useAutoScrollToVerse } from "~/hooks/useAutoScrollToVerse";
 import type { Chapter, Verse } from "@mahfuz/shared/types";
 import type { ChapterAudioData } from "@mahfuz/audio-engine";
 import { useReadingHistory } from "~/stores/useReadingHistory";
@@ -176,7 +175,16 @@ function MushafPageView() {
 
   const translatedVerses = useTranslatedVerses(versesWithWords);
 
-  useAutoScrollToVerse();
+  // Auto-scroll to playing verse (page view renders all verses in DOM, no virtualizer)
+  const currentVerseKey = useAudioStore((s) => s.currentVerseKey);
+  const audioPlaybackState = useAudioStore((s) => s.playbackState);
+  useEffect(() => {
+    if (!currentVerseKey || audioPlaybackState !== "playing") return;
+    const el = document.getElementById(`verse-${currentVerseKey}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [currentVerseKey, audioPlaybackState]);
 
   const visitPage = useReadingHistory((s) => s.visitPage);
   const touchItem = useReadingListStore((s) => s.touchItem);

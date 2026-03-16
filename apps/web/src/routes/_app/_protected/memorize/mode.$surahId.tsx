@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { versesByChapterQueryOptions } from "~/hooks/useVerses";
 import { memorizeWbwByChapterQueryOptions } from "~/hooks/useWbwData";
 import { chapterAudioQueryOptions } from "~/hooks/useAudio";
@@ -98,12 +98,14 @@ function ModeRoute() {
       }
     : audioData ?? null;
 
-  // Start mode when range is selected
+  // Start mode once when range is selected
+  const startedRef = useRef(false);
   useEffect(() => {
-    if (phase === "idle" && selectedRange && selectedVerses.length > 0) {
+    if (!startedRef.current && selectedRange && selectedVerses.length > 0) {
+      startedRef.current = true;
       startMode(mode, sid, selectedVerses.length);
     }
-  }, [phase, selectedRange, selectedVerses.length, startMode, mode, sid]);
+  }, [selectedRange, selectedVerses.length, startMode, mode, sid]);
 
   const handleVerseChange = useCallback((idx: number) => {
     setCurrentVerse(idx);

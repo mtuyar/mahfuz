@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { versesByChapterQueryOptions } from "~/hooks/useVerses";
 import { memorizeWbwByChapterQueryOptions } from "~/hooks/useWbwData";
 import { chaptersQueryOptions } from "~/hooks/useChapters";
@@ -62,11 +62,13 @@ function ImmersiveRoute() {
 
   const { gradeMode } = useGradeFromMode(userId);
 
+  const startedRef = useRef(false);
   useEffect(() => {
-    if (phase === "idle" && verses.length > 0) {
+    if (!startedRef.current && verses.length > 0) {
+      startedRef.current = true;
       startMode("immersive", sid, verses.length);
     }
-  }, [phase, sid, verses.length, startMode]);
+  }, [sid, verses.length, startMode]);
 
   const handleClose = useCallback(() => {
     resetSession();

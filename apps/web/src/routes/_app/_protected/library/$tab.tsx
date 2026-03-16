@@ -240,21 +240,6 @@ function MemorizeTab({ userId }: { userId: string }) {
       <div className="mb-6 flex items-center justify-between">
         <div />
         <div className="flex gap-2">
-          {stats && stats.totalCards > 0 && (
-            <Button
-              variant="secondary"
-              onClick={() => navigate({ to: "/memorize/practice" })}
-            >
-              {t.memorize.practice.button}
-            </Button>
-          )}
-          {stats && stats.dueToday > 0 && (
-            <Button
-              onClick={() => navigate({ to: "/memorize/review" })}
-            >
-              {t.memorize.startReview} ({stats.dueToday})
-            </Button>
-          )}
         </div>
       </div>
 

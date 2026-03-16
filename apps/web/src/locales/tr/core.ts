@@ -18,6 +18,7 @@ export const core = {
     openMenu: "Menüyü aç",
     closeMenu: "Menüyü kapat",
     library: "Kütüphane",
+    discover: "Keşfet",
     openSidebar: "Kenar çubuğunu aç",
     devBanner: "Güzel bir Kur'an deneyimi için özenle çalışıyoruz. Eksikler ve değişiklikler olabilir, hoş görünüze sığınırız.",
     scrollToTop: "Yukarı dön",

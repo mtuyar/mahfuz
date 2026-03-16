@@ -53,6 +53,7 @@ export const Route = createFileRoute("/_app")({
 const NAV_ITEMS = [
   { to: "/browse", labelKey: "mahfuz" as const, icon: BookIcon },
   { to: "/library", labelKey: "library" as const, icon: LibraryIcon },
+  { to: "/discover", labelKey: "discover" as const, icon: DiscoverIcon },
   { to: "/audio", labelKey: "audio" as const, icon: HeadphonesIcon },
 ] as const;
 
@@ -662,6 +663,15 @@ function BookmarkIcon() {
   return (
     <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+    </svg>
+  );
+}
+
+function DiscoverIcon() {
+  return (
+    <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z" />
     </svg>
   );
 }

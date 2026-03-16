@@ -18,6 +18,7 @@ export const core = {
     openMenu: "Abrir menú",
     closeMenu: "Cerrar menú",
     library: "Biblioteca",
+    discover: "Descubrir",
     openSidebar: "Abrir barra lateral",
     devBanner: "Estamos creando con cuidado una hermosa experiencia coránica. Puede haber funciones faltantes y cambios, gracias por su paciencia.",
     scrollToTop: "Ir arriba",

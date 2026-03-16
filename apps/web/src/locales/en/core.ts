@@ -18,6 +18,7 @@ export const core = {
     openMenu: "Open menu",
     closeMenu: "Close menu",
     library: "Library",
+    discover: "Discover",
     openSidebar: "Open sidebar",
     devBanner: "We are carefully crafting a beautiful Quran experience. There may be missing features and changes, thank you for your patience.",
     scrollToTop: "Scroll to top",

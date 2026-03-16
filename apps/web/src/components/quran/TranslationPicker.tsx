@@ -218,7 +218,7 @@ export function TranslationPicker({ compact }: TranslationPickerProps) {
           </span>
           <div className="space-y-1">
             {languageGroups.map((lang) => (
-              <div key={lang}>
+              <div key={lang} className="space-y-1">
                 {hasMultipleGroups && (
                   <span className={`mt-2 mb-1 block font-medium text-[var(--theme-text-quaternary)] first:mt-0 ${compact ? "text-[10px]" : "text-[11px]"}`}>
                     {LANGUAGE_DISPLAY_NAMES[lang]}

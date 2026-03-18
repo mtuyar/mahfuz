@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { Verse, Word } from "@mahfuz/shared/types";
 import { Bismillah } from "./Bismillah";
 import { usePreferencesStore, getActiveColors } from "~/stores/usePreferencesStore";
@@ -12,6 +13,12 @@ interface SelectedWord {
   verseKey: string;
   translation: string;
   transliteration: string;
+}
+
+interface TooltipInfo {
+  translation: string;
+  transliteration: string;
+  rect: DOMRect;
 }
 
 interface MushafViewProps {
@@ -32,6 +39,7 @@ export function MushafView({ verses, showBismillah = true }: MushafViewProps) {
   const { t } = useTranslation();
 
   const [selectedWord, setSelectedWord] = useState<SelectedWord | null>(null);
+  const [tooltip, setTooltip] = useState<TooltipInfo | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const hasTranslations = mushafShowTranslation && verses.some((v) => v.translations && v.translations.length > 0);
@@ -41,6 +49,20 @@ export function MushafView({ verses, showBismillah = true }: MushafViewProps) {
     const target = e.target as HTMLElement;
     if (!target.closest("[data-mushaf-word]")) {
       setSelectedWord(null);
+      setTooltip(null);
+    }
+  }, []);
+
+  const handleWordHover = useCallback((info: TooltipInfo | null) => {
+    setTooltip(info);
+  }, []);
+
+  const handleWordSelect = useCallback((word: SelectedWord | null, rect?: DOMRect) => {
+    setSelectedWord(word);
+    if (word && rect) {
+      setTooltip({ translation: word.translation, transliteration: word.transliteration, rect });
+    } else {
+      setTooltip(null);
     }
   }, []);
 
@@ -83,9 +105,9 @@ export function MushafView({ verses, showBismillah = true }: MushafViewProps) {
             colorizeWords={colorizeWords}
             colors={colors}
             fontSize={mushafArabicFontSize}
-            tooltipTextSize={mushafTooltipTextSize}
             selectedWord={selectedWord}
-            onSelectWord={setSelectedWord}
+            onSelectWord={handleWordSelect}
+            onHoverWord={handleWordHover}
           />
         </div>
 
@@ -113,7 +135,49 @@ export function MushafView({ verses, showBismillah = true }: MushafViewProps) {
           </>
         )}
       </div>
+
+      {/* Floating tooltip — rendered via portal to avoid clipping */}
+      {tooltip && (tooltip.translation || tooltip.transliteration) && (
+        <MushafTooltip
+          tooltip={tooltip}
+          tooltipTextSize={mushafTooltipTextSize}
+        />
+      )}
     </div>
+  );
+}
+
+/** Floating tooltip rendered via portal */
+function MushafTooltip({ tooltip, tooltipTextSize }: { tooltip: TooltipInfo; tooltipTextSize: number }) {
+  const { rect, translation, transliteration } = tooltip;
+
+  // Position above the word, centered horizontally
+  const top = rect.top - 8;
+  const left = rect.left + rect.width / 2;
+
+  return createPortal(
+    <div
+      className="mushaf-tooltip mushaf-tooltip-visible"
+      style={{ top, left }}
+    >
+      {translation && (
+        <span
+          className="block font-medium text-[var(--theme-text)]"
+          style={{ fontSize: `calc(13px * ${tooltipTextSize})` }}
+        >
+          {translation}
+        </span>
+      )}
+      {transliteration && (
+        <span
+          className="block italic text-[var(--theme-text-tertiary)]"
+          style={{ fontSize: `calc(11px * ${tooltipTextSize})` }}
+        >
+          {transliteration}
+        </span>
+      )}
+    </div>,
+    document.body,
   );
 }
 
@@ -124,39 +188,55 @@ function ArabicPage({
   colorizeWords,
   colors,
   fontSize,
-  tooltipTextSize,
   selectedWord,
   onSelectWord,
+  onHoverWord,
 }: {
   verses: Verse[];
   showBismillah: boolean;
   colorizeWords: boolean;
   colors: string[];
   fontSize: number;
-  tooltipTextSize: number;
   selectedWord: SelectedWord | null;
-  onSelectWord: (word: SelectedWord | null) => void;
+  onSelectWord: (word: SelectedWord | null, rect?: DOMRect) => void;
+  onHoverWord: (info: TooltipInfo | null) => void;
 }) {
   const handleWordClick = useCallback(
-    (word: Word, verseKey: string) => {
-      // Toggle: clicking the same word deselects it
+    (word: Word, verseKey: string, el: HTMLElement) => {
       if (selectedWord?.wordId === word.id) {
         onSelectWord(null);
       } else {
+        const rect = el.getBoundingClientRect();
         onSelectWord({
           wordId: word.id,
           verseKey,
           translation: word.translation?.text ?? "",
           transliteration: word.transliteration?.text ?? "",
-        });
+        }, rect);
       }
     },
     [selectedWord, onSelectWord],
   );
 
+  const handleMouseEnter = useCallback(
+    (word: Word, el: HTMLElement) => {
+      const rect = el.getBoundingClientRect();
+      onHoverWord({
+        translation: word.translation?.text ?? "",
+        transliteration: word.transliteration?.text ?? "",
+        rect,
+      });
+    },
+    [onHoverWord],
+  );
+
+  const handleMouseLeave = useCallback(() => {
+    onHoverWord(null);
+  }, [onHoverWord]);
+
   return (
     <p
-      className="arabic-text text-center leading-[2.8] text-[var(--mushaf-ink)]"
+      className="arabic-text text-justify leading-[2.8] text-[var(--mushaf-ink)]"
       style={{ fontSize: `calc(1.65rem * ${fontSize})` }}
       dir="rtl"
     >
@@ -179,33 +259,20 @@ function ArabicPage({
             {words.length > 0
               ? words.map((w, i) => {
                   const isSelected = selectedWord?.wordId === w.id;
-                  const hasTooltip = w.translation?.text || w.transliteration?.text;
                   return (
                     <span
                       key={w.id}
                       data-mushaf-word
-                      className={`mushaf-word-interactive relative inline ${isSelected ? "mushaf-word-selected" : ""}`}
+                      className={`mushaf-word-interactive inline ${isSelected ? "mushaf-word-selected" : ""}`}
                       style={colorizeWords ? { color: colors[i % colors.length] } : undefined}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleWordClick(w, verse.verse_key);
+                        handleWordClick(w, verse.verse_key, e.currentTarget);
                       }}
+                      onMouseEnter={(e) => handleMouseEnter(w, e.currentTarget)}
+                      onMouseLeave={handleMouseLeave}
                     >
                       {w.text_uthmani}{" "}
-                      {hasTooltip && (
-                        <span className={`mushaf-tooltip ${isSelected ? "!opacity-100" : ""}`}>
-                          {w.translation?.text && (
-                            <span className="block font-medium text-[var(--theme-text)]" style={{ fontSize: `calc(11px * ${tooltipTextSize})` }}>
-                              {w.translation.text}
-                            </span>
-                          )}
-                          {w.transliteration?.text && (
-                            <span className="block italic text-[var(--theme-text-tertiary)]" style={{ fontSize: `calc(10px * ${tooltipTextSize})` }}>
-                              {w.transliteration.text}
-                            </span>
-                          )}
-                        </span>
-                      )}
                     </span>
                   );
                 })

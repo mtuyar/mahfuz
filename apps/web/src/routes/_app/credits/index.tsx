@@ -147,6 +147,31 @@ function CreditsPage() {
         </p>
       </div>
 
+      {/* Special Thanks */}
+      <CreditsSection title={t.credits.specialThanks}>
+        <p className="mb-4 text-[13px] text-[var(--theme-text-tertiary)]">
+          {t.credits.specialThanksDesc}
+        </p>
+        <div className="flex items-center gap-3">
+          <img
+            src="https://github.com/enesismail.png"
+            alt="Ismail Arslan"
+            className="h-10 w-10 rounded-full ring-2 ring-[var(--theme-border)]"
+          />
+          <div>
+            <a
+              href="https://github.com/enesismail"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[13px] font-semibold text-[var(--theme-text)] hover:text-primary-600 transition-colors"
+            >
+              Ismail Arslan
+            </a>
+            <p className="text-[12px] text-[var(--theme-text-tertiary)]">@enesismail</p>
+          </div>
+        </div>
+      </CreditsSection>
+
       {/* Contact & Contribute */}
       <CreditsSection title={t.credits.contactUs}>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">

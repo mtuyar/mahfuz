@@ -10,7 +10,7 @@ const PopoverContent = React.forwardRef<
     <PopoverPrimitive.Content
       ref={ref}
       sideOffset={sideOffset}
-      className={`z-50 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-elevated)] shadow-[var(--shadow-float)] animate-scale-in ${className}`}
+      className={`z-50 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-elevated)] font-sans shadow-[var(--shadow-float)] animate-scale-in ${className}`}
       {...props}
     />
   </PopoverPrimitive.Portal>

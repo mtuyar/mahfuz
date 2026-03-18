@@ -16,7 +16,7 @@ export const MorphologyPopover = memo(function MorphologyPopover({
   const posLabels = t.discover.posLabels as Record<string, string>;
 
   return (
-    <div className="absolute bottom-full left-1/2 z-40 mb-2 w-56 -translate-x-1/2 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-elevated)] p-3 shadow-[var(--shadow-float)]">
+    <div className="absolute bottom-full left-1/2 z-40 mb-2 w-56 -translate-x-1/2 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-elevated)] p-3 font-sans shadow-[var(--shadow-float)]">
       {/* Root */}
       {morph.root && (
         <div className="mb-2 flex items-center justify-between">

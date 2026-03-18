@@ -87,7 +87,7 @@ export const SyntaxNodeComponent = memo(function SyntaxNodeComponent({ node, isH
         createPortal(
           <div
             ref={popoverRef}
-            className="fixed z-50 w-52 -translate-x-1/2 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-elevated)] p-3 shadow-[var(--shadow-float)]"
+            className="fixed z-50 w-52 -translate-x-1/2 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-elevated)] p-3 font-sans shadow-[var(--shadow-float)]"
             style={{ top: pos.top, left: pos.left }}
           >
             <p

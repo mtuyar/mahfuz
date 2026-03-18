@@ -14,7 +14,7 @@ export function TranslationView({ verse }: TranslationViewProps) {
       {verse.translations.map((t) => (
         <div key={t.id} className="rounded-2xl bg-[var(--theme-pill-bg)] p-5">
           <p
-            className="text-[15px] leading-relaxed text-[var(--theme-text)]"
+            className="font-sans text-[15px] leading-relaxed text-[var(--theme-text)]"
             dangerouslySetInnerHTML={{ __html: t.text }}
           />
           <p className="mt-2 text-[11px] font-medium uppercase tracking-wider text-[var(--theme-text-tertiary)]">

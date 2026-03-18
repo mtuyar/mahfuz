@@ -449,8 +449,9 @@ body {
   font-feature-settings: "cv62" 1, "ss05" 1;
 }
 
-/* Translation/transliteration text scale */
+/* Translation/transliteration text scale + font */
 .translation-text {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: calc(1em * var(--translation-font-scale, 1));
 }
 

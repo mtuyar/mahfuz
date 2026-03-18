@@ -101,10 +101,10 @@ export function ImmersiveContent({ surahId, verses, onVerseChange, onComplete }:
           <div className="flex flex-wrap justify-center gap-3" dir="rtl">
             {words.map((w) => (
               <div key={w.id} className="flex flex-col items-center gap-0.5">
-                <span className="text-[13px] text-white/70">
+                <span className="font-sans text-[13px] text-white/70">
                   {w.transliteration?.text}
                 </span>
-                <span className="text-[11px] text-white/40">
+                <span className="font-sans text-[11px] text-white/40">
                   {w.translation?.text}
                 </span>
               </div>

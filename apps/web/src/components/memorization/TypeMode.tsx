@@ -204,7 +204,7 @@ export function TypeMode({ surahId, verses, onVerseChange, onComplete }: TypeMod
 
         {/* Meaning */}
         {currentWord.translation?.text && (
-          <p className="mb-4 text-[14px] text-[var(--theme-text-tertiary)]">
+          <p className="mb-4 font-sans text-[14px] text-[var(--theme-text-tertiary)]">
             {currentWord.translation.text}
           </p>
         )}
@@ -212,7 +212,7 @@ export function TypeMode({ surahId, verses, onVerseChange, onComplete }: TypeMod
         {/* Expected transliteration (shown as hint or answer) */}
         {showAnswer && (
           <div className="mb-4 rounded-lg bg-amber-500/10 px-3 py-2">
-            <p className="text-[14px] font-medium text-amber-600">{expectedTranslit}</p>
+            <p className="font-sans text-[14px] font-medium text-amber-600">{expectedTranslit}</p>
           </div>
         )}
 

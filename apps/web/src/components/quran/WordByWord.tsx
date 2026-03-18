@@ -126,7 +126,7 @@ export const WordByWord = memo(function WordByWord({
 
             {/* Tap-to-select popup */}
             {isSelected && hasPopup && !showGrammar && (
-              <span className="absolute bottom-full left-1/2 z-30 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-lg bg-[var(--theme-bg-elevated)] px-3 py-2 shadow-[var(--shadow-float)]">
+              <span className="absolute bottom-full left-1/2 z-30 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-lg bg-[var(--theme-bg-elevated)] px-3 py-2 font-sans shadow-[var(--shadow-float)]">
                 {word.translation?.text && (
                   <span className="block font-sans font-medium text-[var(--theme-text)]" style={{ fontSize: `calc(12px * ${prefs.wbwPopupTextSize})` }}>
                     {word.translation.text}

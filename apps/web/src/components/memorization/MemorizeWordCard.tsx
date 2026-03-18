@@ -45,14 +45,14 @@ export function MemorizeWordCard({
 
       {/* Transliteration */}
       {!isHidden && word.transliteration?.text && (
-        <span className={`${s.sub} text-primary-600`}>
+        <span className={`${s.sub} font-sans text-primary-600`}>
           {word.transliteration.text}
         </span>
       )}
 
       {/* Meaning / Translation */}
       {!isHidden && word.translation?.text && (
-        <span className={`${s.meaning} text-[var(--theme-text-tertiary)]`}>
+        <span className={`${s.meaning} font-sans text-[var(--theme-text-tertiary)]`}>
           {word.translation.text}
         </span>
       )}

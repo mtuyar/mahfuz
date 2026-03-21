@@ -3,6 +3,8 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { chaptersQueryOptions } from "~/hooks/useChapters";
 import { ModePicker } from "~/components/memorization/ModePicker";
 import { Loading } from "~/components/ui/Loading";
+import { useTranslation } from "~/hooks/useTranslation";
+import { getSurahName } from "~/lib/surah-name";
 import type { MemorizeSourceType, MemorizeSource } from "~/stores/useMemorizationStore";
 
 export const Route = createFileRoute("/_app/_protected/memorize/session/$sourceType/$sourceId")({
@@ -21,6 +23,7 @@ function SessionRoute() {
   const { session } = Route.useRouteContext();
   const userId = session!.user.id;
   const source: MemorizeSource = { type: sourceType as MemorizeSourceType, id: Number(sourceId) };
+  const { locale } = useTranslation();
 
   const { data: chapters } = useSuspenseQuery(chaptersQueryOptions());
 
@@ -36,7 +39,7 @@ function SessionRoute() {
     return (
       <ModePicker
         source={source}
-        surahName={chapter.name_arabic}
+        surahName={getSurahName(chapter.id, chapter.translated_name.name, locale)}
         versesCount={chapter.verses_count}
         userId={userId}
       />

@@ -7,6 +7,8 @@ import { chapterAudioQueryOptions } from "~/hooks/useAudio";
 import { chaptersQueryOptions } from "~/hooks/useChapters";
 import { mergeWbwIntoVerses } from "~/lib/quran-data";
 import { getActiveLayout } from "~/lib/page-layout";
+import { useTranslation } from "~/hooks/useTranslation";
+import { getSurahName } from "~/lib/surah-name";
 import type { ChapterAudioData } from "@mahfuz/audio-engine";
 import { useAudioStore } from "~/stores/useAudioStore";
 import { useMemorizationStore } from "~/stores/useMemorizationStore";
@@ -63,6 +65,7 @@ function ModeRoute() {
   const source: MemorizeSource = { type: sourceType as MemorizeSourceType, id: Number(sourceId) };
   const reciterId = useAudioStore((s) => s.reciterId);
 
+  const { locale } = useTranslation();
   const { data: chaptersData } = useSuspenseQuery(chaptersQueryOptions());
 
   // Load verses based on source type
@@ -72,7 +75,7 @@ function ModeRoute() {
 
   if (source.type === "surah") {
     const chapter = chaptersData.find((c) => c.id === source.id);
-    sourceLabel = chapter?.name_arabic || `Sûre ${source.id}`;
+    sourceLabel = chapter ? getSurahName(chapter.id, chapter.translated_name.name, locale) : `Sûre ${source.id}`;
     audioSurahId = source.id;
     const { data: versesData } = useSuspenseQuery(versesByChapterQueryOptions(source.id));
     const { data: wbwData } = useQuery(memorizeWbwByChapterQueryOptions(source.id));

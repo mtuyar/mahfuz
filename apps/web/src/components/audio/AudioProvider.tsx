@@ -4,6 +4,8 @@ import { useAudioStore } from "~/stores/useAudioStore";
 import type { FetchChapterAudioFn } from "~/stores/useAudioStore";
 import { chapterAudioQueryOptions } from "~/hooks/useAudio";
 import { chaptersQueryOptions } from "~/hooks/useChapters";
+import { useTranslation } from "~/hooks/useTranslation";
+import { getSurahName } from "~/lib/surah-name";
 import type { ChapterAudioData } from "@mahfuz/audio-engine";
 
 /**
@@ -23,6 +25,7 @@ export function AudioProvider() {
   const setFetchFn = useAudioStore((s) => s._setFetchChapterAudioFn);
 
   const queryClient = useQueryClient();
+  const { locale } = useTranslation();
 
   // Wire the auto-continue fetch function so the store can fetch next chapter audio
   const fetchChapterAudio: FetchChapterAudioFn = useCallback(
@@ -43,11 +46,13 @@ export function AudioProvider() {
       // Get chapter name from cached chapters data
       const chapters = await queryClient.fetchQuery(chaptersQueryOptions());
       const chapter = chapters.find((c) => c.id === chapterId);
-      const chapterName = chapter?.translated_name.name ?? `Surah ${chapterId}`;
+      const chapterName = chapter
+        ? getSurahName(chapter.id, chapter.translated_name.name, locale)
+        : `Surah ${chapterId}`;
 
       return { audioData, chapterName };
     },
-    [queryClient],
+    [queryClient, locale],
   );
 
   useEffect(() => {

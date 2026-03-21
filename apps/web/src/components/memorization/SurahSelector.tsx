@@ -7,6 +7,7 @@ import type { ConfidenceLevel } from "@mahfuz/shared/types";
 import { useTranslation } from "~/hooks/useTranslation";
 import { interpolate } from "~/lib/i18n-utils";
 import { useAddVerses } from "~/hooks/useMemorization";
+import { getSurahName } from "~/lib/surah-name";
 
 const CONFIDENCE_COLORS: Record<ConfidenceLevel, string> = {
   struggling: "bg-red-500",
@@ -114,7 +115,7 @@ export function SurahSelector({ userId }: SurahSelectorProps) {
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<0 | 1 | 2>(0);
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { addVerses, isAdding } = useAddVerses(userId);
   const [quickAddingFor, setQuickAddingFor] = useState<string | null>(null);
   const [quickAddedFor, setQuickAddedFor] = useState<string | null>(null);
@@ -168,6 +169,7 @@ export function SurahSelector({ userId }: SurahSelectorProps) {
       return (
         ch.name_simple.toLowerCase().includes(q) ||
         ch.name_arabic.includes(q) ||
+        getSurahName(ch.id, ch.translated_name.name, locale).toLowerCase().includes(q) ||
         String(ch.id).startsWith(q)
       );
     });
@@ -248,7 +250,7 @@ export function SurahSelector({ userId }: SurahSelectorProps) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="text-[14px] font-medium text-[var(--theme-text)]">
-                {ch.name_simple}
+                {getSurahName(ch.id, ch.translated_name.name, locale)}
               </span>
               <span className="text-[13px] text-[var(--theme-text-tertiary)]">
                 {ch.name_arabic}
@@ -353,7 +355,7 @@ export function SurahSelector({ userId }: SurahSelectorProps) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="text-[14px] font-medium text-[var(--theme-text)]">
-                {ch.name_simple}
+                {getSurahName(ch.id, ch.translated_name.name, locale)}
               </span>
               <span className="text-[13px] text-[var(--theme-text-tertiary)]">
                 {ch.name_arabic}
@@ -447,7 +449,7 @@ export function SurahSelector({ userId }: SurahSelectorProps) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="text-[14px] font-medium text-[var(--theme-text)]">
-                {ch.name_simple}
+                {getSurahName(ch.id, ch.translated_name.name, locale)}
               </span>
               <span className="text-[13px] text-[var(--theme-text-tertiary)]">
                 {ch.name_arabic}

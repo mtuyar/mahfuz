@@ -5,6 +5,8 @@ import { versesByChapterQueryOptions } from "~/hooks/useVerses";
 import { memorizeWbwByChapterQueryOptions } from "~/hooks/useWbwData";
 import { chaptersQueryOptions } from "~/hooks/useChapters";
 import { mergeWbwIntoVerses } from "~/lib/quran-data";
+import { useTranslation } from "~/hooks/useTranslation";
+import { getSurahName } from "~/lib/surah-name";
 import { useMemorizationStore } from "~/stores/useMemorizationStore";
 import type { MemorizeSource, MemorizeSourceType, ModeResult } from "~/stores/useMemorizationStore";
 import { useGradeFromMode } from "~/hooks/useMemorization";
@@ -42,6 +44,7 @@ function ImmersiveRoute() {
   const userId = session!.user.id;
   const navigate = useNavigate();
   const source: MemorizeSource = { type: sourceType as MemorizeSourceType, id: Number(sourceId) };
+  const { locale } = useTranslation();
 
   const { data: chaptersData } = useSuspenseQuery(chaptersQueryOptions());
   const chapter = chaptersData.find((c) => c.id === source.id);
@@ -83,7 +86,7 @@ function ImmersiveRoute() {
   return (
     <ImmersiveLayout
       onClose={handleClose}
-      verseCounter={`${currentVerseIndex + 1} / ${verses.length} · ${chapter?.name_arabic || ""}`}
+      verseCounter={`${currentVerseIndex + 1} / ${verses.length} · ${chapter ? getSurahName(chapter.id, chapter.translated_name.name, locale) : ""}`}
     >
       <ImmersiveContent source={source} verses={verses} onVerseChange={handleVerseChange} onComplete={handleComplete} />
     </ImmersiveLayout>

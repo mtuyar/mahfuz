@@ -98,6 +98,11 @@
   --theme-hero-search-hover: rgba(255, 255, 255, 0.95);
   --theme-hero-pill-bg: rgba(255, 255, 255, 0.7);
   --theme-hero-pill-border: rgba(5, 150, 105, 0.15);
+
+  --theme-watermark-opacity: 0.06;
+  --theme-watermark-hover-opacity: 0.18;
+  --theme-watermark-header-opacity: 0.28;
+  --theme-watermark-filter: none;
 }
 
 [data-theme="crystal"] {
@@ -242,6 +247,11 @@
   --theme-hero-search-hover: rgba(255, 255, 255, 0.1);
   --theme-hero-pill-bg: rgba(255, 255, 255, 0.06);
   --theme-hero-pill-border: rgba(255, 255, 255, 0.08);
+
+  --theme-watermark-opacity: 0.12;
+  --theme-watermark-hover-opacity: 0.25;
+  --theme-watermark-header-opacity: 0.20;
+  --theme-watermark-filter: brightness(0) invert(1);
 }
 
 [data-theme="dimmed"] {
@@ -285,6 +295,11 @@
   --theme-hero-search-hover: rgba(205, 217, 229, 0.1);
   --theme-hero-pill-bg: rgba(205, 217, 229, 0.06);
   --theme-hero-pill-border: rgba(205, 217, 229, 0.1);
+
+  --theme-watermark-opacity: 0.10;
+  --theme-watermark-hover-opacity: 0.22;
+  --theme-watermark-header-opacity: 0.18;
+  --theme-watermark-filter: brightness(0) invert(1);
 }
 
 [data-theme="teal"] {
@@ -326,6 +341,11 @@
   --theme-hero-search-hover: rgba(209, 231, 221, 0.12);
   --theme-hero-pill-bg: rgba(209, 231, 221, 0.08);
   --theme-hero-pill-border: rgba(209, 231, 221, 0.1);
+
+  --theme-watermark-opacity: 0.10;
+  --theme-watermark-hover-opacity: 0.22;
+  --theme-watermark-header-opacity: 0.18;
+  --theme-watermark-filter: brightness(0) invert(1);
 }
 
 [data-theme="black"] {
@@ -367,6 +387,11 @@
   --theme-hero-search-hover: rgba(255, 255, 255, 0.1);
   --theme-hero-pill-bg: rgba(255, 255, 255, 0.06);
   --theme-hero-pill-border: rgba(255, 255, 255, 0.08);
+
+  --theme-watermark-opacity: 0.12;
+  --theme-watermark-hover-opacity: 0.25;
+  --theme-watermark-header-opacity: 0.20;
+  --theme-watermark-filter: brightness(0) invert(1);
 }
 
 @font-face {
@@ -433,6 +458,15 @@ body {
   background: rgba(29, 29, 31, 0.82);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* Chapter card watermark — theme-aware opacity & filter */
+.chapter-watermark {
+  opacity: var(--theme-watermark-opacity);
+  filter: var(--theme-watermark-filter);
+}
+.group:hover .chapter-watermark {
+  opacity: var(--theme-watermark-hover-opacity);
 }
 
 /* Arabic text */

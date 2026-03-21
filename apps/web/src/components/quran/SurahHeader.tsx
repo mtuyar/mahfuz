@@ -31,11 +31,15 @@ export function SurahHeader({ chapter, onPlay, isPlaying }: SurahHeaderProps) {
           draggable={false}
           width={isMakkah ? 420 : 400}
           height={isMakkah ? 420 : 400}
-          className={`object-contain opacity-[0.28] ${
+          className={`object-contain ${
             isMakkah
               ? "h-[420px] w-[420px]"
               : "h-[400px] w-[400px]"
           }`}
+          style={{
+            opacity: "var(--theme-watermark-header-opacity)",
+            filter: "var(--theme-watermark-filter)",
+          }}
         />
       </div>
 

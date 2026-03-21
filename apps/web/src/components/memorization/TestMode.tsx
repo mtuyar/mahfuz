@@ -301,6 +301,11 @@ export function TestMode({ source, verses, onVerseChange, onComplete }: TestMode
   const answeredCount = answers.size;
   const totalBlanks = blanks.length;
 
+  // Whether bottom panel is visible (options or feedback)
+  const showBottomPanel =
+    (currentBlank && !answers.has(currentBlank.flatIdx) && !pendingAdvance) ||
+    (currentBlank && answers.has(currentBlank.flatIdx));
+
   return (
     <div className="flex flex-col" style={{ minHeight: "calc(100dvh - 200px)" }}>
       {/* Sub-progress */}
@@ -317,6 +322,7 @@ export function TestMode({ source, verses, onVerseChange, onComplete }: TestMode
       <div
         className="flex-1 overflow-y-auto rounded-2xl bg-[var(--theme-bg-primary)] p-4 shadow-[var(--shadow-card)] sm:p-6"
         dir="rtl"
+        style={{ paddingBottom: showBottomPanel ? "calc(220px + env(safe-area-inset-bottom, 0px))" : undefined }}
       >
         {verses.map((verse, vIdx) => {
           const words =
@@ -390,18 +396,21 @@ export function TestMode({ source, verses, onVerseChange, onComplete }: TestMode
         })}
       </div>
 
-      {/* MCQ options */}
+      {/* MCQ options — fixed bottom panel */}
       {currentBlank && !answers.has(currentBlank.flatIdx) && !pendingAdvance && (
-        <div className="sticky bottom-0 mt-3 rounded-2xl bg-[var(--theme-bg-primary)] p-4 shadow-[var(--shadow-card)]">
-          <p className="mb-3 text-center text-[12px] text-[var(--theme-text-tertiary)]">
+        <div
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--theme-border)] bg-[var(--theme-bg-primary)] px-4 pt-3 shadow-[0_-4px_24px_rgba(0,0,0,0.12)]"
+          style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))" }}
+        >
+          <p className="mb-2.5 text-center text-[12px] font-medium text-[var(--theme-text-tertiary)]">
             {t.memorize.verification.pickWord}
           </p>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-3">
             {currentBlank.options.map((word, idx) => (
               <button
                 key={`${currentBlank.flatIdx}-${idx}`}
                 onClick={() => handlePickOption(word)}
-                className="arabic-text rounded-xl border-2 border-[var(--theme-divider)] bg-[var(--theme-bg-primary)] px-3 py-2.5 text-center text-[17px] text-[var(--theme-text)] transition-all hover:border-primary-400 hover:bg-primary-500/10 active:scale-[0.97]"
+                className="arabic-text rounded-2xl border-2 border-[var(--theme-divider)] bg-[var(--theme-bg-primary)] px-4 py-4 text-center text-[22px] leading-snug text-[var(--theme-text)] transition-all hover:border-primary-400 hover:bg-primary-500/10 active:scale-[0.97] sm:text-[24px]"
               >
                 {word}
               </button>
@@ -410,19 +419,22 @@ export function TestMode({ source, verses, onVerseChange, onComplete }: TestMode
         </div>
       )}
 
-      {/* Feedback flash */}
+      {/* Feedback flash — fixed bottom panel */}
       {currentBlank && answers.has(currentBlank.flatIdx) && (
-        <div className="mt-3 rounded-2xl bg-[var(--theme-bg-primary)] p-4 text-center shadow-[var(--shadow-card)]">
+        <div
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--theme-border)] bg-[var(--theme-bg-primary)] px-4 py-5 text-center shadow-[0_-4px_24px_rgba(0,0,0,0.12)]"
+          style={{ paddingBottom: "calc(20px + env(safe-area-inset-bottom, 0px))" }}
+        >
           {answers.get(currentBlank.flatIdx)!.correct ? (
-            <p className="text-[15px] font-medium text-emerald-600">
+            <p className="text-[17px] font-semibold text-emerald-600">
               {t.memorize.verification.correct}
             </p>
           ) : (
             <div>
-              <p className="text-[15px] font-medium text-red-500">
+              <p className="text-[17px] font-semibold text-red-500">
                 {t.memorize.verification.wrong}
               </p>
-              <p className="arabic-text mt-1 text-[18px] text-emerald-600">
+              <p className="arabic-text mt-2 text-[24px] text-emerald-600">
                 {currentBlank.correctWord}
               </p>
             </div>

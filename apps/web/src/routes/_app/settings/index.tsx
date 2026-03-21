@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   usePreferencesStore,
   ARABIC_FONTS,
@@ -28,6 +28,7 @@ import { LanguageSection } from "~/components/settings/LanguageSection";
 import { PageLayoutSection } from "~/components/settings/PageLayoutSection";
 import { PresetSection } from "~/components/settings/PresetSection";
 import { getLocaleConfig } from "~/locales/registry";
+import { SPECIAL_THANKS } from "~/lib/constants";
 import { useReadingPrefs } from "~/stores/useReadingPrefs";
 
 export const Route = createFileRoute("/_app/settings/")({
@@ -69,6 +70,11 @@ function SettingsPage() {
     // Prepend as primary
     setSelectedTranslations([match.id, ...selectedTranslations]);
   };
+
+  const randomThanks = useMemo(() => {
+    const shuffled = [...SPECIAL_THANKS].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 3);
+  }, []);
 
   const arabicFontId = usePreferencesStore((s) => s.arabicFontId);
   const viewMode = usePreferencesStore((s) => s.viewMode);
@@ -329,23 +335,27 @@ function SettingsPage() {
         <p className="mb-4 text-xs text-[var(--theme-text-tertiary)]">
           {t.settings.creditsDesc}
         </p>
-        <div className="flex items-center gap-3">
-          <img
-            src="https://github.com/enesismail.png"
-            alt="Ismail Arslan"
-            className="h-10 w-10 rounded-full ring-2 ring-[var(--theme-border)]"
-          />
-          <div>
-            <a
-              href="https://github.com/enesismail"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-medium text-[var(--theme-text)] hover:text-primary-600 transition-colors"
-            >
-              Ismail Arslan
-            </a>
-            <p className="text-xs text-[var(--theme-text-tertiary)]">@enesismail</p>
-          </div>
+        <div className="space-y-3">
+          {randomThanks.map((person) => (
+            <div key={person.github} className="flex items-center gap-3">
+              <img
+                src={`https://github.com/${person.github}.png`}
+                alt={person.name}
+                className="h-10 w-10 rounded-full ring-2 ring-[var(--theme-border)]"
+              />
+              <div>
+                <a
+                  href={`https://github.com/${person.github}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium text-[var(--theme-text)] hover:text-primary-600 transition-colors"
+                >
+                  {person.name}
+                </a>
+                <p className="text-xs text-[var(--theme-text-tertiary)]">@{person.github}</p>
+              </div>
+            </div>
+          ))}
         </div>
         <Link
           to="/credits"

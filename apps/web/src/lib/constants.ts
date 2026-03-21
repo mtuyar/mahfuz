@@ -85,6 +85,22 @@ export interface ReadingPreset {
   };
 }
 
+export const SPECIAL_THANKS = [
+  { name: "Arda Balkan", github: "ardabalkandev" },
+  { name: "Faruk Talha Güner", github: "Lagarux" },
+  { name: "Firdevs Ilgaz", github: "teengineer" },
+  { name: "Furkan Arlı", github: "frknarli" },
+  { name: "Halil İbrahim Bestil", github: "hibestil" },
+  { name: "Ismail Arslan", github: "enesismail" },
+  { name: "İ. Zal Solmuş", github: "zalcod" },
+  { name: "M. Taha Uyar", github: "mtuyar" },
+  { name: "R. Fatih Akbulut", github: "R-Fatih" },
+  { name: "Safa Orhan", github: "safaorhan" },
+  { name: "Şeref Ilgaz", github: "serefilgaz" },
+  { name: "Tarık Çalışkan", github: "atarikcaliskan" },
+  { name: "Yakup Selim Uçar", github: "yakupselimucar" },
+] as const;
+
 export const READING_PRESETS: ReadingPreset[] = [
   {
     id: "night",

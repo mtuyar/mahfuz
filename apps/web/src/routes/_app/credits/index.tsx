@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "~/hooks/useTranslation";
+import { SPECIAL_THANKS } from "~/lib/constants";
 
 interface GitHubContributor {
   login: string;
@@ -81,22 +82,6 @@ const FONT_CREDITS = [
     descKey: "googleFonts" as const,
     url: "https://fonts.google.com",
   },
-] as const;
-
-const SPECIAL_THANKS = [
-  { name: "Arda Balkan", github: "ardabalkandev" },
-  { name: "Faruk Talha Güner", github: "Lagarux" },
-  { name: "Firdevs Ilgaz", github: "teengineer" },
-  { name: "Furkan Arlı", github: "frknarli" },
-  { name: "Halil İbrahim Bestil", github: "hibestil" },
-  { name: "Ismail Arslan", github: "enesismail" },
-  { name: "İ. Zal Solmuş", github: "zalcod" },
-  { name: "M. Taha Uyar", github: "mtuyar" },
-  { name: "R. Fatih Akbulut", github: "R-Fatih" },
-  { name: "Safa Orhan", github: "safaorhan" },
-  { name: "Şeref Ilgaz", github: "serefilgaz" },
-  { name: "Tarık Çalışkan", github: "atarikcaliskan" },
-  { name: "Yakup Selim Uçar", github: "yakupselimucar" },
 ] as const;
 
 const ISSUE_LINK_DEFS = [

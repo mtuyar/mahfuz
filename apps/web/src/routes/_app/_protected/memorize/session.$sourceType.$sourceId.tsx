@@ -7,7 +7,14 @@ import { useTranslation } from "~/hooks/useTranslation";
 import { getSurahName } from "~/lib/surah-name";
 import type { MemorizeSourceType, MemorizeSource } from "~/stores/useMemorizationStore";
 
+interface SessionSearch {
+  practice?: boolean;
+}
+
 export const Route = createFileRoute("/_app/_protected/memorize/session/$sourceType/$sourceId")({
+  validateSearch: (search: Record<string, unknown>): SessionSearch => ({
+    practice: search.practice === true || search.practice === "true",
+  }),
   loader: ({ context }) => {
     return context.queryClient.ensureQueryData(chaptersQueryOptions());
   },
@@ -20,6 +27,7 @@ export const Route = createFileRoute("/_app/_protected/memorize/session/$sourceT
 
 function SessionRoute() {
   const { sourceType, sourceId } = Route.useParams();
+  const { practice } = Route.useSearch();
   const { session } = Route.useRouteContext();
   const userId = session!.user.id;
   const source: MemorizeSource = { type: sourceType as MemorizeSourceType, id: Number(sourceId) };
@@ -42,6 +50,7 @@ function SessionRoute() {
         surahName={getSurahName(chapter.id, chapter.translated_name.name, locale)}
         versesCount={chapter.verses_count}
         userId={userId}
+        practice={practice}
       />
     );
   }
@@ -54,6 +63,7 @@ function SessionRoute() {
       surahName={label}
       versesCount={0}
       userId={userId}
+      practice={practice}
     />
   );
 }

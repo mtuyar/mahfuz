@@ -57,6 +57,10 @@ export const core = {
     courses: "Kurslar",
     tracks: "Patikalar",
     memorize: "Ezber",
+    practice: "Pratik",
+    practiceDesc: "Herhangi bir sureyi seçerek ezber modlarını deneyimleyin. Pratik modda ezber puanlaması yapılmaz.",
+    practiceSearch: "Sure ara...",
+    practiceLabel: "Pratik Modu",
   },
 
   meta: {

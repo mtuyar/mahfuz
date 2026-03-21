@@ -1,5 +1,6 @@
-import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect, Link } from "@tanstack/react-router";
 import { Suspense, useMemo, useState, useEffect } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { CURRICULUM } from "@mahfuz/shared/data/learn/curriculum";
 import { SIDE_QUESTS } from "@mahfuz/shared/data/learn/quests";
 import { useLearnDashboard, useStageUnlockStatus } from "~/hooks/useLearn";
@@ -9,11 +10,13 @@ import { StatsOverview, SurahSelector, GoalsSettings } from "~/components/memori
 import { memorizationRepository, type MemorizationCardEntry } from "@mahfuz/db";
 import { LibraryCourseCard } from "~/components/library/LibraryCourseCard";
 import { LibraryTrackCard } from "~/components/library/LibraryTrackCard";
+import { chaptersQueryOptions } from "~/hooks/useChapters";
 import { useTranslation } from "~/hooks/useTranslation";
+import { getSurahName } from "~/lib/surah-name";
 import { Skeleton } from "~/components/ui/Skeleton";
 import { Button } from "~/components/ui/Button";
 
-const VALID_TABS = ["courses", "tracks", "memorize"] as const;
+const VALID_TABS = ["courses", "tracks", "memorize", "practice"] as const;
 type TabType = (typeof VALID_TABS)[number];
 
 export const Route = createFileRoute("/_app/_protected/library/$tab")({
@@ -37,6 +40,7 @@ function LibraryPage() {
     { value: "courses" as TabType, label: t.library.courses },
     { value: "tracks" as TabType, label: t.library.tracks },
     { value: "memorize" as TabType, label: t.library.memorize },
+    { value: "practice" as TabType, label: t.library.practice },
   ];
 
   const setTab = (value: TabType) => {
@@ -97,6 +101,7 @@ function LibraryPage() {
         {currentTab === "courses" && <CoursesTab userId={userId} />}
         {currentTab === "tracks" && <TracksTab userId={userId} />}
         {currentTab === "memorize" && <MemorizeTab userId={userId} />}
+        {currentTab === "practice" && <PracticeTab />}
       </Suspense>
     </div>
   );
@@ -288,6 +293,93 @@ function MemorizeTab({ userId }: { userId: string }) {
         >
           <SurahSelector userId={userId} />
         </Suspense>
+      </div>
+    </>
+  );
+}
+
+// ── Practice Tab ────────────────────────────────────────────
+
+function PracticeTab() {
+  const { t, locale } = useTranslation();
+  const [search, setSearch] = useState("");
+  const { data: chapters } = useSuspenseQuery(chaptersQueryOptions());
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return chapters;
+    const q = search.toLowerCase();
+    return chapters.filter(
+      (c) =>
+        c.name_simple.toLowerCase().includes(q) ||
+        c.name_arabic.includes(q) ||
+        getSurahName(c.id, c.translated_name.name, locale).toLowerCase().includes(q) ||
+        String(c.id) === q,
+    );
+  }, [chapters, search, locale]);
+
+  return (
+    <>
+      <p className="mb-4 text-[13px] text-[var(--theme-text-secondary)]">
+        {t.library.practiceDesc}
+      </p>
+
+      {/* Search */}
+      <div className="relative mb-4">
+        <svg
+          className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--theme-text-quaternary)]"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <path d="M21 21l-4.35-4.35" />
+        </svg>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t.library.practiceSearch}
+          className="w-full rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-primary)] py-2.5 pl-10 pr-4 text-[14px] text-[var(--theme-text)] placeholder:text-[var(--theme-text-quaternary)] focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+        />
+      </div>
+
+      {/* Surah grid */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {filtered.map((ch) => (
+          <Link
+            key={ch.id}
+            to="/memorize/session/$sourceType/$sourceId"
+            params={{ sourceType: "surah", sourceId: String(ch.id) }}
+            search={{ practice: true }}
+            className="flex items-center gap-3 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-primary)] p-3 transition-colors hover:bg-[var(--theme-hover-bg)] active:scale-[0.98]"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-600/10 text-[13px] font-semibold tabular-nums text-primary-700">
+              {ch.id}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[14px] font-semibold text-[var(--theme-text)]">
+                {getSurahName(ch.id, ch.translated_name.name, locale)}
+              </p>
+              <p className="text-[12px] text-[var(--theme-text-tertiary)]">
+                {ch.name_arabic} · {ch.verses_count} {t.memorize.verse}
+              </p>
+            </div>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="shrink-0 text-[var(--theme-text-quaternary)]"
+            >
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </Link>
+        ))}
       </div>
     </>
   );

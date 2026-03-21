@@ -26,11 +26,13 @@ import type { Verse } from "@mahfuz/shared/types";
 
 interface ModeSearch {
   mode: MemorizeMode;
+  practice?: boolean;
 }
 
 export const Route = createFileRoute("/_app/_protected/memorize/mode/$sourceType/$sourceId")({
   validateSearch: (search: Record<string, unknown>): ModeSearch => ({
     mode: (search.mode as MemorizeMode) || "learn",
+    practice: search.practice === true || search.practice === "true",
   }),
   loader: async ({ context, params }) => {
     const id = Number(params.sourceId);
@@ -58,7 +60,7 @@ export const Route = createFileRoute("/_app/_protected/memorize/mode/$sourceType
 
 function ModeRoute() {
   const { sourceType, sourceId } = Route.useParams();
-  const { mode } = Route.useSearch();
+  const { mode, practice } = Route.useSearch();
   const { session } = Route.useRouteContext();
   const userId = session!.user.id;
   const navigate = useNavigate();
@@ -143,13 +145,19 @@ function ModeRoute() {
 
   const handleComplete = useCallback(async (result: ModeResult) => {
     finishMode(result);
-    await gradeMode(result);
-  }, [finishMode, gradeMode]);
+    if (!practice) {
+      await gradeMode(result);
+    }
+  }, [finishMode, gradeMode, practice]);
 
   const navBack = useCallback(() => {
     resetSession();
-    navigate({ to: "/memorize/session/$sourceType/$sourceId", params: { sourceType: source.type, sourceId: String(source.id) } });
-  }, [resetSession, navigate, source]);
+    if (practice) {
+      navigate({ to: "/library/$tab", params: { tab: "practice" } });
+    } else {
+      navigate({ to: "/memorize/session/$sourceType/$sourceId", params: { sourceType: source.type, sourceId: String(source.id) } });
+    }
+  }, [resetSession, navigate, source, practice]);
 
   if (!selectedRange && phase === "idle") {
     return (

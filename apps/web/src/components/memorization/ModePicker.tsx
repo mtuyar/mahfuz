@@ -8,6 +8,7 @@ interface ModePickerProps {
   surahName: string;
   versesCount: number;
   userId: string;
+  practice?: boolean;
 }
 
 interface ModeCard {
@@ -17,7 +18,7 @@ interface ModeCard {
   bgClass: string;
 }
 
-export function ModePicker({ source, surahName, versesCount, userId }: ModePickerProps) {
+export function ModePicker({ source, surahName, versesCount, userId, practice }: ModePickerProps) {
   const { t } = useTranslation();
   const { progressMap } = useSurahProgress(userId, source.id);
 
@@ -100,13 +101,21 @@ export function ModePicker({ source, surahName, versesCount, userId }: ModePicke
       {/* Surah header */}
       <div className="mb-6 text-center">
         <h1 className="arabic-text mb-1 text-[22px] font-bold text-[var(--theme-text)]">{surahName}</h1>
-        <p className="text-[13px] text-[var(--theme-text-tertiary)]">
-          {versesCount} {t.memorize.verse} · {overallProgress}% {t.memorize.modes.mastered}
-        </p>
-        {totalCards > 0 && (
-          <div className="mx-auto mt-2 h-1.5 w-48 overflow-hidden rounded-full bg-[var(--theme-hover-bg)]">
-            <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${overallProgress}%` }} />
-          </div>
+        {practice ? (
+          <p className="text-[13px] text-[var(--theme-text-tertiary)]">
+            {versesCount} {t.memorize.verse} · {t.library.practiceLabel}
+          </p>
+        ) : (
+          <>
+            <p className="text-[13px] text-[var(--theme-text-tertiary)]">
+              {versesCount} {t.memorize.verse} · {overallProgress}% {t.memorize.modes.mastered}
+            </p>
+            {totalCards > 0 && (
+              <div className="mx-auto mt-2 h-1.5 w-48 overflow-hidden rounded-full bg-[var(--theme-hover-bg)]">
+                <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${overallProgress}%` }} />
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -119,6 +128,7 @@ export function ModePicker({ source, surahName, versesCount, userId }: ModePicke
                 key={mode}
                 to="/memorize-immersive/$sourceType/$sourceId"
                 params={{ sourceType: source.type, sourceId: String(source.id) }}
+                search={practice ? { practice: true } : {}}
                 className="flex items-center gap-4 rounded-2xl bg-[var(--theme-bg-primary)] p-4 shadow-[var(--shadow-card)] transition-all hover:shadow-md active:scale-[0.98]"
               >
                 <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${bgClass}`}>
@@ -144,7 +154,7 @@ export function ModePicker({ source, surahName, versesCount, userId }: ModePicke
               key={mode}
               to="/memorize/mode/$sourceType/$sourceId"
               params={{ sourceType: source.type, sourceId: String(source.id) }}
-              search={{ mode }}
+              search={practice ? { mode, practice: true } : { mode }}
               className="flex items-center gap-4 rounded-2xl bg-[var(--theme-bg-primary)] p-4 shadow-[var(--shadow-card)] transition-all hover:shadow-md active:scale-[0.98]"
             >
               <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${bgClass}`}>

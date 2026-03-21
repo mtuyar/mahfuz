@@ -57,6 +57,10 @@ export const core = {
     courses: "Cursos",
     tracks: "Pistas",
     memorize: "Memorizar",
+    practice: "Práctica",
+    practiceDesc: "Prueba los modos de memorización en cualquier sura. El modo práctica no afecta las puntuaciones.",
+    practiceSearch: "Buscar sura...",
+    practiceLabel: "Modo Práctica",
   },
 
   meta: {

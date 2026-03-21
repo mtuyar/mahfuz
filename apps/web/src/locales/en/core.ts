@@ -57,6 +57,10 @@ export const core = {
     courses: "Courses",
     tracks: "Tracks",
     memorize: "Memorize",
+    practice: "Practice",
+    practiceDesc: "Try memorization modes on any surah. Practice mode does not affect memorization scores.",
+    practiceSearch: "Search surah...",
+    practiceLabel: "Practice Mode",
   },
 
   meta: {

@@ -44,6 +44,10 @@ export const readingMessages = {
     pageAbbr: "s.",
     makkah: "Mekkî",
     madinah: "Medenî",
+    lockMode: "Kilit Modu",
+    lockModeActive: "Ekran kilitli",
+    lockModeHint: "Açmak için kilide uzun basın",
+    lockModeUnlock: "Kilidi Aç",
   },
 
   reading: {

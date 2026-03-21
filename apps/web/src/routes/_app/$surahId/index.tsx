@@ -112,6 +112,37 @@ function SurahView() {
   const queryClient = useQueryClient();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [modeOpen, setModeOpen] = useState(false);
+
+  // Lock mode — prevents scroll & accidental navigation (for child Quran lessons)
+  const [lockMode, setLockMode] = useState(false);
+  const lockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [lockProgress, setLockProgress] = useState(false); // visual feedback during long-press
+
+  // Disable scroll on parent <main> when locked
+  useEffect(() => {
+    if (!lockMode) return;
+    // Find the scrollable main ancestor
+    const main = document.querySelector("main");
+    if (!main) return;
+    main.style.overflow = "hidden";
+    return () => { main.style.overflow = ""; };
+  }, [lockMode]);
+
+  const handleLockUnlockStart = useCallback(() => {
+    setLockProgress(true);
+    lockTimerRef.current = setTimeout(() => {
+      setLockMode(false);
+      setLockProgress(false);
+    }, 1500);
+  }, []);
+
+  const handleLockUnlockEnd = useCallback(() => {
+    if (lockTimerRef.current) {
+      clearTimeout(lockTimerRef.current);
+      lockTimerRef.current = null;
+    }
+    setLockProgress(false);
+  }, []);
   const viewMode = usePreferencesStore((s) => s.viewMode);
   const setViewMode = usePreferencesStore((s) => s.setViewMode);
   const mushafShowTranslation = usePreferencesStore((s) => s.mushafShowTranslation);
@@ -418,6 +449,18 @@ function SurahView() {
               {t.quranReader.verseByVerse}
             </Link>
 
+            {/* Lock mode toggle */}
+            <button
+              onClick={() => setLockMode(true)}
+              className="inline-flex items-center gap-1 rounded-full bg-[var(--theme-hover-bg)] px-3 py-1.5 text-[11px] font-medium text-[var(--theme-text-secondary)] transition-all hover:bg-[var(--theme-pill-bg)] active:scale-[0.97]"
+            >
+              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0110 0v4" />
+              </svg>
+              {t.quranReader.lockMode}
+            </button>
+
           </div>
         </div>
 
@@ -553,6 +596,71 @@ function SurahView() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Lock mode overlay */}
+      {lockMode && (
+        <>
+          {/* Top banner */}
+          <div className="fixed inset-x-0 top-0 z-50 flex items-center justify-center gap-2 bg-amber-500/95 px-4 py-2 text-[12px] font-medium text-white backdrop-blur-sm">
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0110 0v4" />
+            </svg>
+            {t.quranReader.lockModeActive}
+            <span className="ml-1 opacity-70">— {t.quranReader.lockModeHint}</span>
+          </div>
+
+          {/* Touch shield — blocks scroll and navigation but allows word taps through */}
+          <div
+            className="fixed inset-0 z-40"
+            style={{ touchAction: "none" }}
+            onTouchMove={(e) => e.preventDefault()}
+            onWheel={(e) => e.preventDefault()}
+          />
+
+          {/* Floating unlock button — requires long press */}
+          <button
+            type="button"
+            onPointerDown={handleLockUnlockStart}
+            onPointerUp={handleLockUnlockEnd}
+            onPointerLeave={handleLockUnlockEnd}
+            onContextMenu={(e) => e.preventDefault()}
+            className={`fixed bottom-6 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-[var(--shadow-modal)] transition-all lg:bottom-8 lg:right-8 ${
+              lockProgress
+                ? "scale-110 bg-green-500 text-white"
+                : "bg-amber-500 text-white active:scale-95"
+            }`}
+            aria-label={t.quranReader.lockModeUnlock}
+          >
+            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              {lockProgress ? (
+                // Unlocking animation icon
+                <>
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 019.9-1" />
+                </>
+              ) : (
+                // Locked icon
+                <>
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </>
+              )}
+            </svg>
+            {/* Progress ring */}
+            {lockProgress && (
+              <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 56 56">
+                <circle
+                  cx="28" cy="28" r="25"
+                  fill="none" stroke="white" strokeWidth="3"
+                  strokeDasharray="157" strokeDashoffset="157"
+                  style={{ animation: "lock-progress 1.5s linear forwards" }}
+                />
+              </svg>
+            )}
+          </button>
+        </>
+      )}
     </div>
   );
 }

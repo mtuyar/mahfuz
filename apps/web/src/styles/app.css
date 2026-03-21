@@ -1277,3 +1277,9 @@ body {
 .mushaf-tooltip-visible {
   opacity: 1;
 }
+
+/* Lock mode: progress ring animation */
+@keyframes lock-progress {
+  from { stroke-dashoffset: 157; }
+  to { stroke-dashoffset: 0; }
+}

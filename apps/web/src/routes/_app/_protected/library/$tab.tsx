@@ -290,12 +290,12 @@ function CoursesTab({ userId }: { userId: string }) {
                           {title}
                         </h3>
                         {isCurrent && !isComplete && (
-                          <span className="rounded-full bg-primary-100 px-2 py-0.5 text-[10px] font-semibold text-primary-700 dark:bg-primary-900/40 dark:text-primary-400">
+                          <span className="rounded-full bg-primary-600 px-2 py-0.5 text-[10px] font-semibold text-white">
                             {t.learn.levels.roadmapCurrent}
                           </span>
                         )}
                         {isComplete && (
-                          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400">
+                          <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white">
                             {t.learn.levels.roadmapCompleted}
                           </span>
                         )}

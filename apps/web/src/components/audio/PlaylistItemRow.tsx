@@ -14,7 +14,348 @@ interface PlaylistItemRowProps {
   onSplit: (id: string, chunkSize: number) => void;
 }
 
-/* ── Dual-thumb range slider ── */
+/** Show verse grid for surahs with this many or fewer verses */
+const VERSE_GRID_MAX = 40;
+
+/* ── Main Component ── */
+
+export function PlaylistItemRow({
+  item,
+  index,
+  isPlaying,
+  isFirst,
+  isLast,
+  onUpdate,
+  onRemove,
+  onMove,
+  onSplit,
+}: PlaylistItemRowProps) {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+
+  const isAllVerses = item.fromVerse === 1 && item.toVerse === item.versesCount;
+  const verseCount = item.toVerse - item.fromVerse + 1;
+  const isInfinite = item.repeatCount === 0;
+  const useGrid = item.versesCount <= VERSE_GRID_MAX;
+
+  const handleRangeChange = useCallback(
+    (from: number, to: number) => {
+      onUpdate(item.id, { fromVerse: from, toVerse: to });
+    },
+    [item.id, onUpdate],
+  );
+
+  return (
+    <div
+      className={`overflow-hidden rounded-xl border transition-colors ${
+        isPlaying
+          ? "border-primary-500/40 bg-primary-50/50 dark:bg-primary-900/20"
+          : "border-[var(--theme-border)] bg-[var(--theme-bg-secondary)]"
+      }`}
+    >
+      {/* ── Header ── */}
+      <div className="flex items-center gap-2.5 px-3 py-2.5">
+        {/* Index */}
+        <span className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-[12px] font-bold ${
+          isPlaying
+            ? "bg-primary-600 text-white"
+            : "bg-[var(--theme-bg-tertiary)] text-[var(--theme-text-secondary)]"
+        }`}>
+          {isPlaying ? (
+            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-white" />
+          ) : (
+            index + 1
+          )}
+        </span>
+
+        {/* Name + info */}
+        <button
+          className="flex flex-1 min-w-0 flex-col items-start"
+          onClick={() => setExpanded(!expanded)}
+        >
+          <span className="block truncate text-[15px] font-semibold text-[var(--theme-text)]">
+            {item.surahNameTr}
+          </span>
+          <span className="block text-[12px] text-[var(--theme-text-tertiary)]">
+            {item.surahNameAr}
+            {" · "}
+            {isAllVerses
+              ? t.playlist.allVerses
+              : `${item.fromVerse}-${item.toVerse}`}
+            {!isInfinite && item.repeatCount > 1 && ` · ${item.repeatCount}x`}
+            {isInfinite && " · \u221E"}
+          </span>
+        </button>
+
+        {/* Actions */}
+        <div className="flex items-center gap-0.5 flex-shrink-0">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className={`rounded-lg p-1.5 transition-colors ${expanded ? "bg-primary-100 text-primary-600 dark:bg-primary-900/30" : "text-[var(--theme-text-tertiary)] hover:bg-[var(--theme-hover-bg)] hover:text-[var(--theme-text)]"}`}
+            aria-label={expanded ? t.audio.collapse : t.audio.expand}
+          >
+            <svg className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+          <button
+            onClick={() => onRemove(item.id)}
+            className="rounded-lg p-1.5 text-[var(--theme-text-tertiary)] hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
+            aria-label={t.playlist.remove}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* ── Collapsed: compact bar ── */}
+      {!expanded && (
+        <div className="flex items-center gap-2 border-t border-[var(--theme-border-light,var(--theme-border))]/50 px-3 py-2">
+          {/* Visual range bar */}
+          {item.versesCount > 1 ? (
+            <button
+              onClick={() => setExpanded(true)}
+              className="flex flex-1 items-center gap-2 rounded-lg px-1 py-0.5 transition-colors hover:bg-[var(--theme-hover-bg)]"
+            >
+              <span className="text-[12px] text-[var(--theme-text-tertiary)] flex-shrink-0">{t.playlist.verseRange}</span>
+              <MiniRangeBar from={item.fromVerse} to={item.toVerse} total={item.versesCount} />
+              <span className="text-[12px] font-medium text-[var(--theme-text-secondary)] flex-shrink-0">
+                {item.fromVerse}–{item.toVerse}
+              </span>
+            </button>
+          ) : (
+            <span className="flex-1 text-[12px] text-[var(--theme-text-tertiary)]">1 {t.common.verse.toLowerCase()}</span>
+          )}
+
+          {/* Repeat compact */}
+          <RepeatStepper
+            repeatCount={item.repeatCount}
+            isInfinite={isInfinite}
+            onChange={(rc) => onUpdate(item.id, { repeatCount: rc })}
+          />
+        </div>
+      )}
+
+      {/* ── Expanded ── */}
+      {expanded && (
+        <div className="border-t border-[var(--theme-border-light,var(--theme-border))]/50 px-3 pb-3 pt-2 space-y-3">
+          {/* Verse selector */}
+          {item.versesCount > 1 && (
+            useGrid ? (
+              <VerseGrid
+                total={item.versesCount}
+                from={item.fromVerse}
+                to={item.toVerse}
+                onChange={handleRangeChange}
+              />
+            ) : (
+              <div className="space-y-2">
+                <VerseRangeSlider
+                  min={1}
+                  max={item.versesCount}
+                  from={item.fromVerse}
+                  to={item.toVerse}
+                  onChange={handleRangeChange}
+                />
+                <div className="flex items-center justify-between">
+                  <VerseInput
+                    value={item.fromVerse}
+                    min={1}
+                    max={item.toVerse}
+                    onChange={(v) => onUpdate(item.id, { fromVerse: v })}
+                  />
+                  <span className="text-[12px] text-[var(--theme-text-tertiary)]">
+                    {verseCount} {t.common.verse.toLowerCase()}
+                  </span>
+                  <VerseInput
+                    value={item.toVerse}
+                    min={item.fromVerse}
+                    max={item.versesCount}
+                    onChange={(v) => onUpdate(item.id, { toVerse: v })}
+                  />
+                </div>
+                <QuickRangePresets
+                  versesCount={item.versesCount}
+                  fromVerse={item.fromVerse}
+                  toVerse={item.toVerse}
+                  onChange={handleRangeChange}
+                />
+              </div>
+            )
+          )}
+
+          {/* Repeat */}
+          <div className="flex items-center justify-between">
+            <span className="text-[13px] font-medium text-[var(--theme-text-secondary)]">
+              {t.playlist.repeat}
+            </span>
+            <RepeatStepper
+              repeatCount={item.repeatCount}
+              isInfinite={isInfinite}
+              onChange={(rc) => onUpdate(item.id, { repeatCount: rc })}
+            />
+          </div>
+
+          {/* Move + Split row */}
+          <div className="flex items-center gap-2 border-t border-[var(--theme-border)] pt-2">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => onMove(index, index - 1)}
+                disabled={isFirst}
+                className="rounded-lg p-1.5 text-[var(--theme-text-tertiary)] transition-colors hover:bg-[var(--theme-hover-bg)] hover:text-[var(--theme-text)] disabled:opacity-30"
+                aria-label={t.playlist.moveUp}
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => onMove(index, index + 1)}
+                disabled={isLast}
+                className="rounded-lg p-1.5 text-[var(--theme-text-tertiary)] transition-colors hover:bg-[var(--theme-hover-bg)] hover:text-[var(--theme-text)] disabled:opacity-30"
+                aria-label={t.playlist.moveDown}
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+
+            {verseCount > 1 && (
+              <div className="ml-auto flex items-center gap-1.5">
+                <span className="text-[12px] text-[var(--theme-text-tertiary)]">{t.playlist.splitInto}:</span>
+                {[1, 2, 3, 5, 10].filter((n) => n < verseCount).map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => onSplit(item.id, n)}
+                    className="rounded-lg border border-[var(--theme-border)] bg-[var(--theme-bg-primary)] px-2 py-0.5 text-[11px] font-medium text-[var(--theme-text)] transition-colors hover:border-primary-500/40 hover:bg-primary-50/50 dark:hover:bg-primary-900/20"
+                  >
+                    {n === 1
+                      ? t.playlist.perVerse
+                      : t.playlist.nVerses.replace("{n}", String(n))}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Mini range bar for collapsed view ── */
+
+function MiniRangeBar({ from, to, total }: { from: number; to: number; total: number }) {
+  const leftPct = ((from - 1) / total) * 100;
+  const widthPct = ((to - from + 1) / total) * 100;
+
+  return (
+    <div className="relative h-1.5 flex-1 rounded-full bg-[var(--theme-bg-tertiary)]">
+      <div
+        className="absolute top-0 h-full rounded-full bg-primary-500/60"
+        style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+      />
+    </div>
+  );
+}
+
+/* ── Tappable verse grid (for surahs ≤ 40 verses) ── */
+
+function VerseGrid({
+  total,
+  from,
+  to,
+  onChange,
+}: {
+  total: number;
+  from: number;
+  to: number;
+  onChange: (from: number, to: number) => void;
+}) {
+  const { t } = useTranslation();
+  const isAll = from === 1 && to === total;
+
+  const handleVerseTap = (v: number) => {
+    // If tapping the only selected verse, select all
+    if (from === to && from === v) {
+      onChange(1, total);
+      return;
+    }
+    // Decide whether to adjust from or to based on proximity
+    const distFrom = Math.abs(v - from);
+    const distTo = Math.abs(v - to);
+    if (v <= from) {
+      // Tap at or before start → set new start
+      onChange(v, to);
+    } else if (v >= to) {
+      // Tap at or after end → set new end
+      onChange(from, v);
+    } else if (distFrom <= distTo) {
+      onChange(v, to);
+    } else {
+      onChange(from, v);
+    }
+  };
+
+  // Build verses array
+  const verses: number[] = [];
+  for (let v = 1; v <= total; v++) verses.push(v);
+
+  return (
+    <div className="space-y-2">
+      {/* "Tümü" toggle + range label */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => onChange(1, total)}
+          className={`rounded-full px-3 py-1 text-[12px] font-semibold transition-colors ${
+            isAll
+              ? "bg-primary-600 text-white"
+              : "bg-[var(--theme-bg-tertiary)] text-[var(--theme-text-secondary)] hover:bg-primary-100 hover:text-primary-700 dark:hover:bg-primary-900/30"
+          }`}
+        >
+          {t.playlist.allVerses}
+        </button>
+        <span className="text-[12px] text-[var(--theme-text-tertiary)]">
+          {from === to
+            ? `${t.playlist.verseRange} ${from}`
+            : `${t.playlist.verseRange} ${from}–${to}`}
+          <span className="ml-1 text-[var(--theme-text-quaternary)]">
+            ({to - from + 1}/{total})
+          </span>
+        </span>
+      </div>
+
+      {/* Grid */}
+      <div className="flex flex-wrap gap-1">
+        {verses.map((v) => {
+          const inRange = v >= from && v <= to;
+          const isEndpoint = v === from || v === to;
+
+          return (
+            <button
+              key={v}
+              onClick={() => handleVerseTap(v)}
+              className={`flex h-8 min-w-[2rem] items-center justify-center rounded-lg text-[12px] font-medium transition-all ${
+                inRange
+                  ? isEndpoint
+                    ? "bg-primary-600 text-white shadow-sm ring-2 ring-primary-600/30"
+                    : "bg-primary-100 text-primary-700 dark:bg-primary-800/40 dark:text-primary-200"
+                  : "bg-[var(--theme-bg-tertiary)] text-[var(--theme-text-tertiary)] hover:bg-[var(--theme-hover-bg)] hover:text-[var(--theme-text)]"
+              }`}
+            >
+              {v}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── Dual-thumb range slider (for long surahs) ── */
 
 function VerseRangeSlider({
   min,
@@ -71,7 +412,6 @@ function VerseRangeSlider({
     dragging.current = null;
   }, []);
 
-  // Tap on track → move nearest thumb
   const handleTrackClick = useCallback(
     (e: React.MouseEvent) => {
       if ((e.target as HTMLElement).dataset.thumb) return;
@@ -97,21 +437,17 @@ function VerseRangeSlider({
       onPointerUp={handlePointerUp}
       onClick={handleTrackClick}
     >
-      {/* Track bg */}
       <div className="absolute top-1/2 left-0 right-0 h-1.5 -translate-y-1/2 rounded-full bg-[var(--theme-bg-tertiary)]" />
-      {/* Active range */}
       <div
         className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary-500/70"
         style={{ left: `${leftPct}%`, width: `${rightPct - leftPct}%` }}
       />
-      {/* From thumb */}
       <div
         data-thumb="from"
         className="absolute top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 cursor-grab rounded-full border-2 border-primary-500 bg-white shadow-sm active:cursor-grabbing active:scale-110 dark:bg-[var(--theme-bg-secondary)]"
         style={{ left: `${leftPct}%` }}
         onPointerDown={handlePointerDown("from")}
       />
-      {/* To thumb */}
       <div
         data-thumb="to"
         className="absolute top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 cursor-grab rounded-full border-2 border-primary-500 bg-white shadow-sm active:cursor-grabbing active:scale-110 dark:bg-[var(--theme-bg-secondary)]"
@@ -122,7 +458,7 @@ function VerseRangeSlider({
   );
 }
 
-/* ── Editable verse number (text input, allows clearing) ── */
+/* ── Editable verse number input ── */
 
 function VerseInput({
   value,
@@ -138,9 +474,7 @@ function VerseInput({
   const [draft, setDraft] = useState(String(value));
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Sync external value changes
   useEffect(() => {
-    // Only sync if not focused (user isn't typing)
     if (document.activeElement !== inputRef.current) {
       setDraft(String(value));
     }
@@ -152,7 +486,6 @@ function VerseInput({
       onChange(n);
       setDraft(String(n));
     } else {
-      // Reset to current value
       setDraft(String(value));
     }
   };
@@ -172,7 +505,7 @@ function VerseInput({
   );
 }
 
-/* ── Quick range presets ── */
+/* ── Quick range presets (for long surahs) ── */
 
 function QuickRangePresets({
   versesCount,
@@ -186,19 +519,14 @@ function QuickRangePresets({
   onChange: (from: number, to: number) => void;
 }) {
   const { t } = useTranslation();
-  const isAll = fromVerse === 1 && toVerse === versesCount;
 
-  // Generate smart presets based on surah length
   const presets: { label: string; from: number; to: number }[] = [];
-
-  // "Tümü" always
   presets.push({ label: t.playlist.allVerses, from: 1, to: versesCount });
 
   if (versesCount > 5) {
-    // İlk 5, İlk 10, Son 5, İlk yarı, Son yarı
-    presets.push({ label: `1-5`, from: 1, to: 5 });
+    presets.push({ label: "1-5", from: 1, to: 5 });
     if (versesCount > 15) {
-      presets.push({ label: `1-10`, from: 1, to: 10 });
+      presets.push({ label: "1-10", from: 1, to: 10 });
     }
     const half = Math.ceil(versesCount / 2);
     presets.push({ label: `1-${half}`, from: 1, to: half });
@@ -232,246 +560,6 @@ function QuickRangePresets({
   );
 }
 
-/* ── Main Component ── */
-
-export function PlaylistItemRow({
-  item,
-  index,
-  isPlaying,
-  isFirst,
-  isLast,
-  onUpdate,
-  onRemove,
-  onMove,
-  onSplit,
-}: PlaylistItemRowProps) {
-  const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(false);
-
-  const isAllVerses = item.fromVerse === 1 && item.toVerse === item.versesCount;
-  const verseCount = item.toVerse - item.fromVerse + 1;
-  const isInfinite = item.repeatCount === 0;
-
-  const handleRangeChange = useCallback(
-    (from: number, to: number) => {
-      onUpdate(item.id, { fromVerse: from, toVerse: to });
-    },
-    [item.id, onUpdate],
-  );
-
-  return (
-    <div
-      className={`rounded-xl border transition-colors ${
-        isPlaying
-          ? "border-primary-500/40 bg-primary-50/50 dark:bg-primary-900/20"
-          : "border-[var(--theme-border)] bg-[var(--theme-bg-secondary)]"
-      }`}
-    >
-      {/* ── Header row: name + summary + actions ── */}
-      <div className="flex items-center gap-2 p-3 pb-0">
-        {/* Index badge */}
-        <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--theme-bg-tertiary)] text-[12px] font-bold text-[var(--theme-text-secondary)]">
-          {index + 1}
-        </span>
-
-        {isPlaying && (
-          <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center">
-            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-primary-500" />
-          </span>
-        )}
-
-        {/* Surah info */}
-        <button
-          className="flex flex-1 min-w-0 flex-col items-start"
-          onClick={() => setExpanded(!expanded)}
-        >
-          <span className="block truncate text-[15px] font-semibold text-[var(--theme-text)]">
-            {item.surahNameTr}
-          </span>
-          <span className="block text-[12px] text-[var(--theme-text-tertiary)]">
-            {item.surahNameAr}
-            {" · "}
-            {isAllVerses
-              ? t.playlist.allVerses
-              : `${item.fromVerse}-${item.toVerse}`}
-            {!isInfinite && item.repeatCount > 1 && ` · ${item.repeatCount}x`}
-            {isInfinite && " · ∞"}
-          </span>
-        </button>
-
-        {/* Action buttons */}
-        <div className="flex items-center gap-0.5 flex-shrink-0">
-          {/* Expand/collapse */}
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className={`rounded-lg p-1.5 transition-colors ${expanded ? "bg-primary-100 text-primary-600 dark:bg-primary-900/30" : "text-[var(--theme-text-tertiary)] hover:bg-[var(--theme-hover-bg)] hover:text-[var(--theme-text)]"}`}
-            aria-label={expanded ? t.audio.collapse : t.audio.expand}
-          >
-            <svg className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-            </svg>
-          </button>
-
-          {/* Remove */}
-          <button
-            onClick={() => onRemove(item.id)}
-            className="rounded-lg p-1.5 text-[var(--theme-text-tertiary)] hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
-            aria-label={t.playlist.remove}
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* ── Collapsed: compact verse range + repeat ── */}
-      {!expanded && (
-        <div className="flex items-center gap-2 px-3 py-2">
-          <div className="flex items-center gap-1.5 text-[13px]">
-            <span className="text-[var(--theme-text-tertiary)]">{t.playlist.verseRange}:</span>
-            <VerseInput
-              value={item.fromVerse}
-              min={1}
-              max={item.toVerse}
-              onChange={(v) => onUpdate(item.id, { fromVerse: v })}
-            />
-            <span className="text-[var(--theme-text-quaternary)]">–</span>
-            <VerseInput
-              value={item.toVerse}
-              min={item.fromVerse}
-              max={item.versesCount}
-              onChange={(v) => onUpdate(item.id, { toVerse: v })}
-            />
-          </div>
-
-          {/* Repeat compact */}
-          <div className="ml-auto flex items-center gap-1">
-            <RepeatStepper
-              repeatCount={item.repeatCount}
-              isInfinite={isInfinite}
-              onChange={(rc) => onUpdate(item.id, { repeatCount: rc })}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* ── Expanded: slider + presets + reorder + split ── */}
-      {expanded && (
-        <div className="px-3 pb-3 pt-1 space-y-3">
-          {/* Range slider */}
-          {item.versesCount > 1 && (
-            <div>
-              <div className="flex items-center justify-between mb-0.5">
-                <span className="text-[12px] font-medium text-[var(--theme-text-secondary)]">
-                  {t.playlist.verseRange}
-                </span>
-                <span className="text-[12px] text-[var(--theme-text-tertiary)]">
-                  {item.fromVerse} – {item.toVerse}
-                  <span className="ml-1 text-[var(--theme-text-quaternary)]">
-                    ({verseCount} {t.common.verse.toLowerCase()})
-                  </span>
-                </span>
-              </div>
-
-              <VerseRangeSlider
-                min={1}
-                max={item.versesCount}
-                from={item.fromVerse}
-                to={item.toVerse}
-                onChange={handleRangeChange}
-              />
-
-              {/* Editable inputs under slider */}
-              <div className="flex items-center justify-between mt-0.5">
-                <VerseInput
-                  value={item.fromVerse}
-                  min={1}
-                  max={item.toVerse}
-                  onChange={(v) => onUpdate(item.id, { fromVerse: v })}
-                />
-                <VerseInput
-                  value={item.toVerse}
-                  min={item.fromVerse}
-                  max={item.versesCount}
-                  onChange={(v) => onUpdate(item.id, { toVerse: v })}
-                />
-              </div>
-
-              {/* Quick presets */}
-              <div className="mt-2">
-                <QuickRangePresets
-                  versesCount={item.versesCount}
-                  fromVerse={item.fromVerse}
-                  toVerse={item.toVerse}
-                  onChange={handleRangeChange}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Repeat */}
-          <div className="flex items-center justify-between">
-            <span className="text-[13px] font-medium text-[var(--theme-text-secondary)]">
-              {t.playlist.repeat}
-            </span>
-            <RepeatStepper
-              repeatCount={item.repeatCount}
-              isInfinite={isInfinite}
-              onChange={(rc) => onUpdate(item.id, { repeatCount: rc })}
-            />
-          </div>
-
-          {/* Actions row: move + split */}
-          <div className="flex items-center gap-2 border-t border-[var(--theme-border)] pt-2">
-            {/* Move */}
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => onMove(index, index - 1)}
-                disabled={isFirst}
-                className="rounded-lg p-1.5 text-[var(--theme-text-tertiary)] transition-colors hover:bg-[var(--theme-hover-bg)] hover:text-[var(--theme-text)] disabled:opacity-30"
-                aria-label={t.playlist.moveUp}
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                </svg>
-              </button>
-              <button
-                onClick={() => onMove(index, index + 1)}
-                disabled={isLast}
-                className="rounded-lg p-1.5 text-[var(--theme-text-tertiary)] transition-colors hover:bg-[var(--theme-hover-bg)] hover:text-[var(--theme-text)] disabled:opacity-30"
-                aria-label={t.playlist.moveDown}
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Split */}
-            {verseCount > 1 && (
-              <div className="ml-auto flex items-center gap-1.5">
-                <span className="text-[12px] text-[var(--theme-text-tertiary)]">{t.playlist.splitInto}:</span>
-                {[1, 2, 3, 5, 10].filter((n) => n < verseCount).map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => onSplit(item.id, n)}
-                    className="rounded-lg border border-[var(--theme-border)] bg-[var(--theme-bg-primary)] px-2 py-0.5 text-[11px] font-medium text-[var(--theme-text)] transition-colors hover:border-primary-500/40 hover:bg-primary-50/50 dark:hover:bg-primary-900/20"
-                  >
-                    {n === 1
-                      ? t.playlist.perVerse
-                      : t.playlist.nVerses.replace("{n}", String(n))}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 /* ── Repeat stepper ── */
 
 function RepeatStepper({
@@ -485,7 +573,6 @@ function RepeatStepper({
 }) {
   return (
     <div className="flex items-center gap-0.5">
-      {/* Decrement */}
       <button
         onClick={() => {
           if (isInfinite) onChange(10);
@@ -498,11 +585,9 @@ function RepeatStepper({
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
         </svg>
       </button>
-      {/* Value */}
       <span className="flex h-7 min-w-[28px] items-center justify-center text-[13px] font-semibold text-[var(--theme-text)]">
-        {isInfinite ? "∞" : `${repeatCount}x`}
+        {isInfinite ? "\u221E" : `${repeatCount}x`}
       </span>
-      {/* Increment */}
       <button
         onClick={() => {
           if (!isInfinite) onChange(repeatCount + 1);
@@ -514,7 +599,6 @@ function RepeatStepper({
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
       </button>
-      {/* Infinity toggle */}
       <button
         onClick={() => onChange(isInfinite ? 1 : 0)}
         className={`ml-0.5 flex h-7 w-7 items-center justify-center rounded-lg border text-[14px] font-bold transition-colors ${
@@ -522,9 +606,9 @@ function RepeatStepper({
             ? "border-primary-500/40 bg-primary-100 text-primary-600 dark:bg-primary-900/30"
             : "border-[var(--theme-border)] bg-[var(--theme-input-bg)] text-[var(--theme-text-quaternary)] hover:bg-[var(--theme-hover-bg)] hover:text-[var(--theme-text-secondary)]"
         }`}
-        aria-label="∞"
+        aria-label="\u221E"
       >
-        ∞
+        {"\u221E"}
       </button>
     </div>
   );

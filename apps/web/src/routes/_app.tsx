@@ -210,6 +210,7 @@ function AppLayout() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [headerHidden, setHeaderHidden] = useState(false);
   const lastScrollTop = useRef(0);
+  const scrollAccumulator = useRef(0);
 
   useEffect(() => {
     const el = mainRef.current;
@@ -217,11 +218,23 @@ function AppLayout() {
     const onScroll = () => {
       const st = el.scrollTop;
       setShowScrollTop(st > 400);
-      // Auto-hide header on detail pages when scrolling down
+      // Auto-hide header on detail pages with hysteresis to prevent flicker
       if (isDetailPage && st > 120) {
-        setHeaderHidden(st > lastScrollTop.current && st - lastScrollTop.current > 5);
+        const delta = st - lastScrollTop.current;
+        // Accumulate scroll direction; reset on direction change
+        if ((delta > 0 && scrollAccumulator.current < 0) || (delta < 0 && scrollAccumulator.current > 0)) {
+          scrollAccumulator.current = 0;
+        }
+        scrollAccumulator.current += delta;
+        // Require 40px accumulated scroll to toggle (was 5px)
+        if (scrollAccumulator.current > 40) {
+          setHeaderHidden(true);
+        } else if (scrollAccumulator.current < -30) {
+          setHeaderHidden(false);
+        }
       } else {
         setHeaderHidden(false);
+        scrollAccumulator.current = 0;
       }
       lastScrollTop.current = st;
     };
@@ -578,9 +591,9 @@ function AppLayout() {
         </div>
       </header>
 
-      {/* Inline search bar on detail pages */}
-      {isDetailPage && !paletteOpen && !headerHidden && (
-        <div className="border-b border-[var(--theme-border)] bg-[var(--theme-bg)] px-4 py-2 sm:px-6">
+      {/* Inline search bar on detail pages — use transform instead of conditional render to avoid layout shift */}
+      {isDetailPage && !paletteOpen && (
+        <div className={`border-b border-[var(--theme-border)] bg-[var(--theme-bg)] px-4 py-2 transition-all duration-300 sm:px-6 ${headerHidden ? "pointer-events-none -mt-12 max-h-0 overflow-hidden border-b-0 py-0 opacity-0" : "max-h-20 opacity-100"}`}>
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}

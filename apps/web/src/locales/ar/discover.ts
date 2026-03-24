@@ -7,6 +7,7 @@ export const discoverMessages = {
     dictionary: "المعجم",
     concepts: "المفاهيم",
     irab: "الإعراب",
+    semanticMap: "الخريطة الدلالية",
 
     // Dictionary tab
     searchRoots: "ابحث عن الجذور...",

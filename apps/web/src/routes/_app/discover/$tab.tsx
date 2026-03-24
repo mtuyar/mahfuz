@@ -4,12 +4,13 @@ import { Loading } from "~/components/ui/Loading";
 import { Skeleton } from "~/components/ui/Skeleton";
 import { useTranslation } from "~/hooks/useTranslation";
 
-const VALID_TABS = ["dictionary", "concepts", "irab"] as const;
+const VALID_TABS = ["dictionary", "concepts", "irab", "map"] as const;
 type TabType = (typeof VALID_TABS)[number];
 
 const DictionaryTab = lazy(() => import("~/components/discover/DictionaryTab").then((m) => ({ default: m.DictionaryTab })));
 const ConceptsTab = lazy(() => import("~/components/discover/ConceptsTab").then((m) => ({ default: m.ConceptsTab })));
 const IrabTab = lazy(() => import("~/components/discover/IrabTab").then((m) => ({ default: m.IrabTab })));
+const SemanticMapTab = lazy(() => import("~/components/discover/SemanticMapTab").then((m) => ({ default: m.SemanticMapTab })));
 
 export const Route = createFileRoute("/_app/discover/$tab")({
   beforeLoad: ({ params }) => {
@@ -41,6 +42,7 @@ function DiscoverPage() {
     { value: "dictionary", label: t.discover.dictionary },
     { value: "concepts", label: t.discover.concepts },
     { value: "irab", label: t.discover.irab },
+    { value: "map", label: t.discover.semanticMap },
   ];
 
   const setTab = (value: TabType) => {
@@ -95,6 +97,7 @@ function DiscoverPage() {
         {currentTab === "dictionary" && <DictionaryTab />}
         {currentTab === "concepts" && <ConceptsTab />}
         {currentTab === "irab" && <IrabTab />}
+        {currentTab === "map" && <SemanticMapTab />}
       </Suspense>
     </div>
   );

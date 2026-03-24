@@ -7,6 +7,7 @@ export const discoverMessages = {
     dictionary: "Dictionary",
     concepts: "Concepts",
     irab: "I'rab",
+    semanticMap: "Semantic Map",
 
     // Dictionary tab
     searchRoots: "Search roots...",

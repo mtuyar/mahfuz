@@ -90,6 +90,9 @@ export function SurahList({ surahs }: SurahListProps) {
               <img
                 src={surah.revelation === "makkah" ? "/images/kaaba.png" : "/images/nabawi.png"}
                 alt=""
+                width={48}
+                height={48}
+                loading="lazy"
                 className="absolute inset-0 w-full h-full object-contain opacity-[0.18]"
               />
               <div className="absolute inset-0 flex items-center justify-center text-base text-[var(--color-text-secondary)] font-semibold">

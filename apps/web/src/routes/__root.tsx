@@ -35,7 +35,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { name: "theme-color", content: "#111111", media: "(prefers-color-scheme: dark)" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
-      { title: "Mahfuz — محفوظ" },
+      { title: "Mahfuz محفوظ" },
     ],
     links: [
       { rel: "icon", href: "/favicon.ico", sizes: "32x32" },

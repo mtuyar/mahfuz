@@ -107,19 +107,19 @@ export function AyahBlock({
       )}
 
       {/* Arapça metin — tecvid aktifse renkli, değilse kelime hover */}
-      <div className="text-justify leading-[2.8]" dir="rtl" style={{ fontFamily: "var(--font-arabic)", fontSize: `${arabicFontSize}rem` }}>
+      <div className="leading-[2.8]" dir="rtl" style={{ fontFamily: "var(--font-arabic)", fontSize: `${arabicFontSize}rem`, textAlign: "justify" }}>
         {showTajweed && textTajweed
           ? parseTajweed(textTajweed, true)
           : textUthmani.split(/\s+/).map((word, i) => (
               <span
                 key={i}
-                className={`inline-block rounded-sm px-[0.08em] transition-colors duration-150 cursor-default ${
+                className={`inline rounded-sm px-[0.06em] transition-colors duration-150 cursor-default ${
                   wordPosition === i + 1
                     ? "word-audio-active"
                     : "hover:bg-[var(--color-word-hover)] hover:text-[var(--color-word-hover-text)]"
                 }`}
               >
-                {word}
+                {word}{" "}
               </span>
             ))}
         <button

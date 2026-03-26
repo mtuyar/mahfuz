@@ -110,11 +110,12 @@ export function MushafPage({ pageNumber, highlightAyah }: MushafPageProps) {
 
             {/* Akan Arapça metin bloğu */}
             <div
-              className="text-right leading-[2.8] text-justify py-2"
+              className="leading-[2.8] py-2"
               dir="rtl"
               style={{
                 fontFamily: "var(--font-arabic)",
                 fontSize: `${arabicFontSize}rem`,
+                textAlign: "justify",
                 textAlignLast: "center",
               }}
             >

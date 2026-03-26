@@ -171,6 +171,21 @@ body {
   font-family: var(--font-ui);
 }
 
+/* ── Audio word highlight ────────────────────────────── */
+
+.word-audio-active {
+  background: var(--color-accent);
+  color: var(--color-bg);
+  border-radius: 4px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.verse-audio-active {
+  background: var(--color-accent);
+  opacity: 0.08;
+  border-radius: 8px;
+}
+
 /* ── Range slider ────────────────────────────────────── */
 
 .settings-range {

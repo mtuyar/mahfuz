@@ -5,6 +5,7 @@
 import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import { useBookmarksStore } from "~/stores/bookmarks.store";
 import { useSettingsStore } from "~/stores/settings.store";
+import { useAudioStore } from "~/stores/audio.store";
 import { parseTajweed } from "~/lib/tajweed-parser";
 import { AyahActionMenu } from "./AyahActionMenu";
 
@@ -34,6 +35,22 @@ export function AyahBlock({
   const blockRef = useRef<HTMLDivElement>(null);
   const [flash, setFlash] = useState(highlight);
 
+  const isBookmarked = useBookmarksStore((s) =>
+    surahId ? s.isBookmarked(surahId, ayahNumber) : false,
+  );
+  const toggleBookmark = useBookmarksStore((s) => s.toggleBookmark);
+  const arabicFontSize = useSettingsStore((s) => s.arabicFontSize);
+  const translationFontSize = useSettingsStore((s) => s.translationFontSize);
+
+  // Audio word tracking
+  const verseKey = surahId ? `${surahId}:${ayahNumber}` : null;
+  const isPlaying = useAudioStore((s) =>
+    s.playbackState === "playing" && s.currentVerseKey === verseKey,
+  );
+  const wordPosition = useAudioStore((s) =>
+    s.currentVerseKey === verseKey ? s.wordPosition : null,
+  );
+
   useEffect(() => {
     if (highlight && blockRef.current) {
       blockRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -42,12 +59,13 @@ export function AyahBlock({
       return () => clearTimeout(timer);
     }
   }, [highlight]);
-  const isBookmarked = useBookmarksStore((s) =>
-    surahId ? s.isBookmarked(surahId, ayahNumber) : false,
-  );
-  const toggleBookmark = useBookmarksStore((s) => s.toggleBookmark);
-  const arabicFontSize = useSettingsStore((s) => s.arabicFontSize);
-  const translationFontSize = useSettingsStore((s) => s.translationFontSize);
+
+  // Auto-scroll to currently playing verse
+  useEffect(() => {
+    if (isPlaying && blockRef.current) {
+      blockRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [isPlaying]);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<DOMRect | null>(null);
@@ -95,7 +113,11 @@ export function AyahBlock({
           : textUthmani.split(/\s+/).map((word, i) => (
               <span
                 key={i}
-                className="inline-block rounded-sm px-[0.08em] transition-colors duration-150 hover:bg-[var(--color-word-hover)] hover:text-[var(--color-word-hover-text)] cursor-default"
+                className={`inline-block rounded-sm px-[0.08em] transition-colors duration-150 cursor-default ${
+                  wordPosition === i + 1
+                    ? "word-audio-active"
+                    : "hover:bg-[var(--color-word-hover)] hover:text-[var(--color-word-hover-text)]"
+                }`}
               >
                 {word}
               </span>

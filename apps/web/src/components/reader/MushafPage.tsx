@@ -6,6 +6,7 @@
 import { useSettingsStore } from "~/stores/settings.store";
 import { useReadingStore } from "~/stores/reading.store";
 import { useBookmarksStore } from "~/stores/bookmarks.store";
+import { useAudioStore } from "~/stores/audio.store";
 import { usePageData, useTajweed, useImlaei } from "~/hooks/useQuranQuery";
 import { cleanImlaei } from "~/lib/strip-diacritics";
 import { parseTajweed } from "~/lib/tajweed-parser";
@@ -165,6 +166,15 @@ function MushafVerse({ surahId, ayahNumber, textUthmani, textTajweed, translatio
   const verseRef = useRef<HTMLSpanElement>(null);
   const [flash, setFlash] = useState(highlight);
 
+  // Audio word tracking
+  const verseKey = `${surahId}:${ayahNumber}`;
+  const isPlaying = useAudioStore((s) =>
+    s.playbackState === "playing" && s.currentVerseKey === verseKey,
+  );
+  const wordPosition = useAudioStore((s) =>
+    s.currentVerseKey === verseKey ? s.wordPosition : null,
+  );
+
   useEffect(() => {
     if (highlight && verseRef.current) {
       verseRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -173,6 +183,13 @@ function MushafVerse({ surahId, ayahNumber, textUthmani, textTajweed, translatio
       return () => clearTimeout(timer);
     }
   }, [highlight]);
+
+  // Auto-scroll to currently playing verse
+  useEffect(() => {
+    if (isPlaying && verseRef.current) {
+      verseRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [isPlaying]);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<DOMRect | null>(null);
@@ -201,7 +218,11 @@ function MushafVerse({ surahId, ayahNumber, textUthmani, textTajweed, translatio
           : textUthmani.split(/\s+/).map((word, i) => (
               <span
                 key={i}
-                className="inline rounded-sm px-[0.06em] transition-colors duration-150 hover:bg-[var(--color-word-hover)] hover:text-[var(--color-word-hover-text)] cursor-default"
+                className={`inline rounded-sm px-[0.06em] transition-colors duration-150 cursor-default ${
+                  wordPosition === i + 1
+                    ? "word-audio-active"
+                    : "hover:bg-[var(--color-word-hover)] hover:text-[var(--color-word-hover-text)]"
+                }`}
               >
                 {word}{" "}
               </span>

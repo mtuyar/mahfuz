@@ -101,7 +101,7 @@ export function BookmarkRow({
       >
         <Link
           {...linkTo}
-          className="flex items-center gap-2.5 px-3 py-2.5 min-h-[44px] pr-10"
+          className="flex items-center gap-2.5 px-3 py-2.5 min-h-[44px]"
         >
           {/* Surah number badge */}
           <span className="w-7 h-7 rounded-md bg-[var(--color-surface)] flex items-center justify-center text-[11px] font-medium text-[var(--color-text-secondary)] shrink-0">
@@ -133,7 +133,7 @@ export function BookmarkRow({
             e.stopPropagation();
             removeBookmark(surahId, ayahNumber);
           }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-[var(--color-text-secondary)] hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:text-red-500 hover:bg-red-500/10 shadow-sm transition-all opacity-0 group-hover:opacity-100"
           aria-label={t.reader.removeBookmark}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">

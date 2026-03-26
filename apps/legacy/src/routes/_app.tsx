@@ -24,6 +24,7 @@ import { useVerseBookmarks } from "~/stores/useVerseBookmarks";
 import { ReadingToolbar } from "~/components/quran/ReadingToolbar";
 import { MahfuzLogo } from "~/components/icons";
 import { useFontLoader } from "~/hooks/useFontLoader";
+import { useWakeLock } from "~/hooks/useWakeLock";
 import { useI18nStore } from "~/stores/useI18nStore";
 import { getAllLocaleConfigs, getLocaleConfig } from "~/locales/registry";
 import type { Locale } from "~/locales/registry";
@@ -82,6 +83,7 @@ function Avatar({ name, image }: { name?: string | null; image?: string | null }
 
 function AppLayout() {
   useFontLoader();
+  useWakeLock(true);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [bookmarksOpen, setBookmarksOpen] = useState(false);

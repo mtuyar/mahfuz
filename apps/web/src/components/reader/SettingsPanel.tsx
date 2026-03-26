@@ -82,14 +82,6 @@ export function SettingsPanel({ open, onClose, context }: SettingsPanelProps) {
     }));
   }, [reciterList]);
 
-  const localeOptions = useMemo(() =>
-    getAllLocaleConfigs().map(({ code, config }) => ({
-      value: code,
-      label: config.displayName,
-      searchText: config.displayName,
-    })),
-  []);
-
   const prevLocaleRef = useRef(locale);
   useEffect(() => {
     if (prevLocaleRef.current === locale) return;
@@ -141,16 +133,16 @@ export function SettingsPanel({ open, onClose, context }: SettingsPanelProps) {
 
           {/* ── Dil + Tema — tek satır ── */}
           <div className="flex items-center gap-3 mb-3 pb-3 border-b border-[var(--color-border)]">
-            <div className="flex-1 min-w-0">
-              <SearchableSelect
-                options={localeOptions}
-                value={locale}
-                onChange={(v) => setLocale(v as Locale)}
-                placeholder={t.settings.language}
-                searchPlaceholder={t.settings.language}
-                noResultsText={t.common.noResults}
-              />
-            </div>
+            <select
+              value={locale}
+              onChange={(e) => setLocale(e.target.value as Locale)}
+              className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)] appearance-none cursor-pointer"
+              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center" }}
+            >
+              {getAllLocaleConfigs().map(({ code, config }) => (
+                <option key={code} value={code}>{config.displayName}</option>
+              ))}
+            </select>
             <div className="flex gap-1.5 shrink-0">
               {THEMES.map((item) => (
                 <button

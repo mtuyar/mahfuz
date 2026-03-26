@@ -4,7 +4,7 @@
  */
 
 import { useMemo, useEffect, useRef } from "react";
-import { useSettingsStore, type Theme, type TextStyle } from "~/stores/settings.store";
+import { useSettingsStore, type Theme, type TextStyle, type WbwDisplay } from "~/stores/settings.store";
 import { useQuery } from "@tanstack/react-query";
 import { recitersQueryOptions, translationSourcesQueryOptions } from "~/hooks/useQuranQuery";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
@@ -36,6 +36,10 @@ export function SettingsPanel({ open, onClose, context }: SettingsPanelProps) {
     toggleTranslation,
     showWbw,
     toggleWbw,
+    wbwTranslation,
+    setWbwTranslation,
+    wbwTranslit,
+    setWbwTranslit,
     showTajweed,
     toggleTajweed,
     readingMode,
@@ -271,6 +275,22 @@ export function SettingsPanel({ open, onClose, context }: SettingsPanelProps) {
                   </label>
                   <Toggle checked={showWbw} onChange={toggleWbw} />
                 </div>
+                {showWbw && (
+                  <div className="mt-2 space-y-1.5 pl-1">
+                    <WbwDisplayControl
+                      label={t.settings.wbwTranslation}
+                      value={wbwTranslation}
+                      onChange={setWbwTranslation}
+                      t={t}
+                    />
+                    <WbwDisplayControl
+                      label={t.settings.wbwTransliteration}
+                      value={wbwTranslit}
+                      onChange={setWbwTranslit}
+                      t={t}
+                    />
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -415,5 +435,42 @@ function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (
         }`}
       />
     </button>
+  );
+}
+
+// ── WBW 3-state kontrol (Kapalı / Hover / Açık) ─────────
+
+const WBW_OPTIONS: WbwDisplay[] = ["off", "hover", "on"];
+
+function WbwDisplayControl({ label, value, onChange, t }: {
+  label: string;
+  value: WbwDisplay;
+  onChange: (v: WbwDisplay) => void;
+  t: any;
+}) {
+  const labels: Record<WbwDisplay, string> = {
+    off: t.settings.wbwOff,
+    hover: t.settings.wbwHover,
+    on: t.settings.wbwOn,
+  };
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-[11px] text-[var(--color-text-secondary)]">{label}</span>
+      <div className="flex rounded-md overflow-hidden border border-[var(--color-border)]">
+        {WBW_OPTIONS.map((opt) => (
+          <button
+            key={opt}
+            onClick={() => onChange(opt)}
+            className={`px-2 py-0.5 text-[10px] transition-colors ${
+              value === opt
+                ? "bg-[var(--color-accent)] text-white"
+                : "bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]"
+            }`}
+          >
+            {labels[opt]}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

@@ -37,7 +37,7 @@ export function SurahView({ surahId, highlightAyah }: SurahViewProps) {
   const { data } = useSurahData(surahId, translationSlug);
   const { data: tajweedData } = useTajweed(surahId, effectiveTajweed);
   const { data: imlaeiData } = useImlaei(surahId, useBasic);
-  const { data: wbwData } = useWbwData(surahId, showTranslation && showWbw);
+  const { data: wbwData } = useWbwData(surahId, showWbw);
 
   const firstPage = data?.ayahs[0]?.pageNumber ?? 0;
   useReadingTracker(firstPage);

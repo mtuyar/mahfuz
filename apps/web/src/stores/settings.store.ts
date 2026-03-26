@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 
 export type Theme = "papyrus" | "sea" | "night";
 export type TextStyle = "uthmani" | "basic";
+export type WbwDisplay = "off" | "hover" | "on";
 
 interface SettingsState {
   theme: Theme;
@@ -10,6 +11,8 @@ interface SettingsState {
   translationSlug: string;
   showTranslation: boolean;
   showWbw: boolean;
+  wbwTranslation: WbwDisplay;
+  wbwTranslit: WbwDisplay;
   showTajweed: boolean;
   readingMode: "page" | "list";
   reciterSlug: string;
@@ -22,6 +25,8 @@ interface SettingsActions {
   setTranslation: (slug: string) => void;
   toggleTranslation: () => void;
   toggleWbw: () => void;
+  setWbwTranslation: (mode: WbwDisplay) => void;
+  setWbwTranslit: (mode: WbwDisplay) => void;
   toggleTajweed: () => void;
   setReadingMode: (mode: "page" | "list") => void;
   setReciter: (slug: string) => void;
@@ -39,6 +44,8 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
       translationSlug: "omer-celik",
       showTranslation: true,
       showWbw: false,
+      wbwTranslation: "on" as WbwDisplay,
+      wbwTranslit: "off" as WbwDisplay,
       showTajweed: false,
       textStyle: "uthmani" as TextStyle,
       readingMode: "page",
@@ -54,6 +61,8 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
       setTranslation: (slug) => set({ translationSlug: slug }),
       toggleTranslation: () => set((s) => ({ showTranslation: !s.showTranslation })),
       toggleWbw: () => set((s) => ({ showWbw: !s.showWbw })),
+      setWbwTranslation: (mode) => set({ wbwTranslation: mode }),
+      setWbwTranslit: (mode) => set({ wbwTranslit: mode }),
       toggleTajweed: () => set((s) => ({ showTajweed: !s.showTajweed })),
       setReadingMode: (mode) => set({ readingMode: mode }),
       setReciter: (slug) => set({ reciterSlug: slug }),
@@ -67,6 +76,8 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
           translationSlug: "omer-celik",
           showTranslation: true,
           showWbw: false,
+          wbwTranslation: "on",
+          wbwTranslit: "off",
           showTajweed: false,
           textStyle: "uthmani",
           readingMode: "page",

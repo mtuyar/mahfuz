@@ -44,6 +44,8 @@ export function AyahBlock({
   const toggleBookmark = useBookmarksStore((s) => s.toggleBookmark);
   const arabicFontSize = useSettingsStore((s) => s.arabicFontSize);
   const translationFontSize = useSettingsStore((s) => s.translationFontSize);
+  const wbwTranslation = useSettingsStore((s) => s.wbwTranslation);
+  const wbwTranslit = useSettingsStore((s) => s.wbwTranslit);
 
   // Audio word tracking
   const verseKey = surahId ? `${surahId}:${ayahNumber}` : null;
@@ -116,7 +118,7 @@ export function AyahBlock({
           {wbwWords.map((w, i) => (
             <div
               key={w.position}
-              className={`flex flex-col items-center min-w-[3rem] rounded-lg px-1.5 py-1 transition-colors duration-150 cursor-default ${
+              className={`group/wbw flex flex-col items-center min-w-[3rem] rounded-lg px-1.5 py-1 transition-colors duration-150 cursor-default ${
                 wordPosition === w.position
                   ? "word-audio-active"
                   : "hover:bg-[var(--color-word-hover)]"
@@ -125,9 +127,21 @@ export function AyahBlock({
               <span style={{ fontFamily: "var(--font-arabic)", fontSize: `${arabicFontSize}rem`, lineHeight: 1.8 }}>
                 {w.textUthmani}
               </span>
-              {w.translation && (
+              {w.transliteration && wbwTranslit !== "off" && (
                 <span
-                  className="text-[var(--color-text-translation)] text-center leading-tight mt-0.5"
+                  className={`text-[var(--color-accent)] text-center leading-tight mt-0.5 italic ${
+                    wbwTranslit === "hover" ? "opacity-0 group-hover/wbw:opacity-100 transition-opacity" : ""
+                  }`}
+                  style={{ fontFamily: "var(--font-ui)", fontSize: `${Math.max(0.6, translationFontSize * 0.65)}rem` }}
+                >
+                  {w.transliteration}
+                </span>
+              )}
+              {w.translation && wbwTranslation !== "off" && (
+                <span
+                  className={`text-[var(--color-text-translation)] text-center leading-tight mt-0.5 ${
+                    wbwTranslation === "hover" ? "opacity-0 group-hover/wbw:opacity-100 transition-opacity" : ""
+                  }`}
                   style={{ fontFamily: "var(--font-ui)", fontSize: `${Math.max(0.65, translationFontSize * 0.75)}rem` }}
                 >
                   {w.translation}

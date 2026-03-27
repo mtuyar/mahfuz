@@ -44,8 +44,8 @@ function SurahRoute() {
   const { surahSlug: slug } = Route.useParams();
   const { ayah } = Route.useSearch();
   const id = surahIdFromSlug(slug)!;
-  const translationSlug = useSettingsStore((s) => s.translationSlug);
-  const { data: surahData } = useSurahData(id, translationSlug);
+  const translationSlugs = useSettingsStore((s) => s.translationSlugs);
+  const { data: surahData } = useSurahData(id, translationSlugs);
   const firstPageNumber = surahData?.ayahs[0]?.pageNumber;
 
   return (

@@ -103,8 +103,8 @@ export const getReciters = createServerFn({ method: "GET" }).handler(async () =>
 // ── Sayfa verisini komple getir (ayetler + sureler + mealler) ──
 
 export const getPageData = createServerFn({ method: "GET" })
-  .inputValidator((input: { pageNumber: number; translationSlug?: string }) => input)
-  .handler(async ({ data: { pageNumber, translationSlug = "omer-celik" } }) => {
+  .inputValidator((input: { pageNumber: number; translationSlugs?: string[] }) => input)
+  .handler(async ({ data: { pageNumber, translationSlugs = ["omer-celik"] } }) => {
     // 1. Sayfadaki ayetleri çek
     const pageAyahs = await db
       .select()
@@ -123,28 +123,34 @@ export const getPageData = createServerFn({ method: "GET" })
 
     const surahMap = new Map(surahList.map((s) => [s.id, s]));
 
-    // 3. Çevirileri çek
-    const [source] = await db
+    // 3. Çoklu çeviri kaynağı çek
+    const sources = await db
       .select()
       .from(translationSources)
-      .where(eq(translationSources.slug, translationSlug));
+      .where(inArray(translationSources.slug, translationSlugs));
 
-    let translationMap = new Map<string, string>();
+    // slug → Map<"surahId:ayahNumber", text>
+    const translationMaps = new Map<string, Map<string, string>>();
 
-    if (source) {
+    if (sources.length > 0) {
+      const sourceIds = sources.map((s) => s.id);
       const trans = await db
         .select()
         .from(translations)
         .where(
           and(
             inArray(translations.surahId, surahIds),
-            eq(translations.sourceId, source.id),
+            inArray(translations.sourceId, sourceIds),
           ),
         );
 
-      translationMap = new Map(
-        trans.map((t) => [`${t.surahId}:${t.ayahNumber}`, t.text]),
-      );
+      const sourceIdToSlug = new Map(sources.map((s) => [s.id, s.slug]));
+      for (const t of trans) {
+        const slug = sourceIdToSlug.get(t.sourceId)!;
+        let map = translationMaps.get(slug);
+        if (!map) { map = new Map(); translationMaps.set(slug, map); }
+        map.set(`${t.surahId}:${t.ayahNumber}`, t.text);
+      }
     }
 
     // 4. Sayfadaki sure gruplarını oluştur
@@ -155,11 +161,14 @@ export const getPageData = createServerFn({ method: "GET" })
         surahId: number;
         ayahNumber: number;
         textUthmani: string;
+        /** Eski tek-meal uyumluluk (ilk slug) */
         translation: string | null;
+        /** Çoklu meal: slug → text */
+        translations: Record<string, string>;
         juzNumber: number;
         hizbNumber: number;
       }>;
-      isStart: boolean; // sayfada sure başlıyor mu?
+      isStart: boolean;
     }> = [];
 
     let currentSurahId = -1;
@@ -177,12 +186,20 @@ export const getPageData = createServerFn({ method: "GET" })
         surahGroups.push(currentGroup);
       }
 
+      const key = `${ayah.surahId}:${ayah.ayahNumber}`;
+      const allTranslations: Record<string, string> = {};
+      for (const [slug, map] of translationMaps) {
+        const text = map.get(key);
+        if (text) allTranslations[slug] = text;
+      }
+
       currentGroup!.ayahs.push({
         id: ayah.id!,
         surahId: ayah.surahId,
         ayahNumber: ayah.ayahNumber,
         textUthmani: ayah.textUthmani,
-        translation: translationMap.get(`${ayah.surahId}:${ayah.ayahNumber}`) ?? null,
+        translation: allTranslations[translationSlugs[0]] ?? null,
+        translations: allTranslations,
         juzNumber: ayah.juzNumber,
         hizbNumber: ayah.hizbNumber,
       });
@@ -199,8 +216,8 @@ export const getPageData = createServerFn({ method: "GET" })
 // ── Sure verisini komple getir ───────────────────────────
 
 export const getSurahData = createServerFn({ method: "GET" })
-  .inputValidator((input: { surahId: number; translationSlug?: string }) => input)
-  .handler(async ({ data: { surahId, translationSlug = "omer-celik" } }) => {
+  .inputValidator((input: { surahId: number; translationSlugs?: string[] }) => input)
+  .handler(async ({ data: { surahId, translationSlugs = ["omer-celik"] } }) => {
     const [surah] = await db.select().from(surahs).where(eq(surahs.id, surahId));
     if (!surah) return null;
 
@@ -210,38 +227,56 @@ export const getSurahData = createServerFn({ method: "GET" })
       .where(eq(ayahs.surahId, surahId))
       .orderBy(asc(ayahs.ayahNumber));
 
-    const [source] = await db
+    // Çoklu çeviri kaynağı
+    const sources = await db
       .select()
       .from(translationSources)
-      .where(eq(translationSources.slug, translationSlug));
+      .where(inArray(translationSources.slug, translationSlugs));
 
-    let translationMap = new Map<number, string>();
+    // slug → Map<ayahNumber, text>
+    const translationMaps = new Map<string, Map<number, string>>();
 
-    if (source) {
+    if (sources.length > 0) {
+      const sourceIds = sources.map((s) => s.id);
       const trans = await db
         .select()
         .from(translations)
         .where(
           and(
             eq(translations.surahId, surahId),
-            eq(translations.sourceId, source.id),
+            inArray(translations.sourceId, sourceIds),
           ),
         );
-      translationMap = new Map(trans.map((t) => [t.ayahNumber, t.text]));
+
+      const sourceIdToSlug = new Map(sources.map((s) => [s.id, s.slug]));
+      for (const t of trans) {
+        const slug = sourceIdToSlug.get(t.sourceId)!;
+        let map = translationMaps.get(slug);
+        if (!map) { map = new Map(); translationMaps.set(slug, map); }
+        map.set(t.ayahNumber, t.text);
+      }
     }
 
     return {
       surah,
-      ayahs: surahAyahs.map((a) => ({
-        id: a.id!,
-        surahId: a.surahId,
-        ayahNumber: a.ayahNumber,
-        textUthmani: a.textUthmani,
-        translation: translationMap.get(a.ayahNumber) ?? null,
-        pageNumber: a.pageNumber,
-        juzNumber: a.juzNumber,
-        hizbNumber: a.hizbNumber,
-        sajdah: a.sajdah,
-      })),
+      ayahs: surahAyahs.map((a) => {
+        const allTranslations: Record<string, string> = {};
+        for (const [slug, map] of translationMaps) {
+          const text = map.get(a.ayahNumber);
+          if (text) allTranslations[slug] = text;
+        }
+        return {
+          id: a.id!,
+          surahId: a.surahId,
+          ayahNumber: a.ayahNumber,
+          textUthmani: a.textUthmani,
+          translation: allTranslations[translationSlugs[0]] ?? null,
+          translations: allTranslations,
+          pageNumber: a.pageNumber,
+          juzNumber: a.juzNumber,
+          hizbNumber: a.hizbNumber,
+          sajdah: a.sajdah,
+        };
+      }),
     };
   });

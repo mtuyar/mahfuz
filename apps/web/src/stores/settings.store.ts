@@ -8,7 +8,7 @@ export type WbwDisplay = "off" | "hover" | "on";
 interface SettingsState {
   theme: Theme;
   textStyle: TextStyle;
-  translationSlug: string;
+  translationSlugs: string[];
   showTranslation: boolean;
   showWbw: boolean;
   wbwTranslation: WbwDisplay;
@@ -22,6 +22,11 @@ interface SettingsState {
 
 interface SettingsActions {
   setTheme: (theme: Theme) => void;
+  /** Bir meal ekle/çıkar (toggle) */
+  toggleTranslationSlug: (slug: string) => void;
+  /** Seçili meali bir adım yukarı/aşağı taşı */
+  moveTranslationSlug: (slug: string, direction: "up" | "down") => void;
+  /** Eski tek-meal setter (geriye uyumluluk — listeyi [slug] yapar) */
   setTranslation: (slug: string) => void;
   toggleTranslation: () => void;
   toggleWbw: () => void;
@@ -41,7 +46,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
     (set) => ({
       // Defaults
       theme: "papyrus" as Theme,
-      translationSlug: "omer-celik",
+      translationSlugs: ["omer-celik"],
       showTranslation: true,
       showWbw: false,
       wbwTranslation: "on" as WbwDisplay,
@@ -58,7 +63,27 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
         document.documentElement.setAttribute("data-theme", theme);
         set({ theme });
       },
-      setTranslation: (slug) => set({ translationSlug: slug }),
+      toggleTranslationSlug: (slug) =>
+        set((s) => {
+          const has = s.translationSlugs.includes(slug);
+          if (has && s.translationSlugs.length === 1) return s; // en az 1 meal kalmalı
+          return {
+            translationSlugs: has
+              ? s.translationSlugs.filter((s2) => s2 !== slug)
+              : [...s.translationSlugs, slug],
+          };
+        }),
+      moveTranslationSlug: (slug, direction) =>
+        set((s) => {
+          const arr = [...s.translationSlugs];
+          const idx = arr.indexOf(slug);
+          if (idx < 0) return s;
+          const target = direction === "up" ? idx - 1 : idx + 1;
+          if (target < 0 || target >= arr.length) return s;
+          [arr[idx], arr[target]] = [arr[target], arr[idx]];
+          return { translationSlugs: arr };
+        }),
+      setTranslation: (slug) => set({ translationSlugs: [slug] }),
       toggleTranslation: () => set((s) => ({ showTranslation: !s.showTranslation })),
       toggleWbw: () => set((s) => ({ showWbw: !s.showWbw })),
       setWbwTranslation: (mode) => set({ wbwTranslation: mode }),
@@ -73,7 +98,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
         document.documentElement.setAttribute("data-theme", "papyrus");
         set({
           theme: "papyrus",
-          translationSlug: "omer-celik",
+          translationSlugs: ["omer-celik"],
           showTranslation: true,
           showWbw: false,
           wbwTranslation: "on",
@@ -89,10 +114,22 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
     }),
     {
       name: "mahfuz-core-settings",
+      version: 1,
       merge: (persisted, current) => ({
         ...current,
         ...(persisted as object),
       }),
+      migrate: (persisted: any, version: number) => {
+        if (version === 0) {
+          // v0 → v1: translationSlug (string) → translationSlugs (string[])
+          const old = persisted as any;
+          if (old.translationSlug && !old.translationSlugs) {
+            old.translationSlugs = [old.translationSlug];
+            delete old.translationSlug;
+          }
+        }
+        return persisted as any;
+      },
     },
   ),
 );

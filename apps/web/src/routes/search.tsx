@@ -20,7 +20,8 @@ function SearchPage() {
   const { t, locale } = useTranslation();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const translationSlug = useSettingsStore((s) => s.translationSlug);
+  const translationSlugs = useSettingsStore((s) => s.translationSlugs);
+  const translationSlug = translationSlugs[0];
   const readingMode = useSettingsStore((s) => s.readingMode);
   const navigate = useNavigate();
   const debounceRef = useState<ReturnType<typeof setTimeout>>(null!);

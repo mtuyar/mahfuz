@@ -26,8 +26,8 @@ function PageRoute() {
   const { pageNumber } = Route.useParams();
   const { ayah } = Route.useSearch();
   const page = parseInt(pageNumber, 10);
-  const translationSlug = useSettingsStore((s) => s.translationSlug);
-  const { data: pageData } = usePageData(page, translationSlug);
+  const translationSlugs = useSettingsStore((s) => s.translationSlugs);
+  const { data: pageData } = usePageData(page, translationSlugs);
   const firstSurahId = pageData?.surahGroups[0]?.surah.id;
 
   return (

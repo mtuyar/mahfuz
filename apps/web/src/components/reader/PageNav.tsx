@@ -1,22 +1,25 @@
 /**
- * Sayfa navigasyonu — önceki/sonraki sayfa + sayfa numarası (tıklanınca atla).
+ * Sayfa navigasyonu — önceki/sonraki sayfa + sure/cüz seçici (tıklanınca açılır).
  */
 
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useSwipeNav } from "~/hooks/useSwipeNav";
-import { PageJumpDialog } from "./PageJumpDialog";
+import { SurahPicker } from "./SurahPicker";
 
 const TOTAL_PAGES = 604;
 
 interface PageNavProps {
   pageNumber: number;
   enableSwipe?: boolean;
+  /** Sayfadaki ilk surenin ID'si (sure seçici için) */
+  surahId?: number;
+  /** Dropdown yukarı açılsın (alt nav için) */
+  dropUp?: boolean;
 }
 
-export function PageNav({ pageNumber, enableSwipe = false }: PageNavProps) {
+export function PageNav({ pageNumber, enableSwipe = false, surahId, dropUp = false }: PageNavProps) {
   const navigate = useNavigate();
-  const [jumpOpen, setJumpOpen] = useState(false);
 
   const goTo = useCallback(
     (page: number) => {
@@ -29,13 +32,12 @@ export function PageNav({ pageNumber, enableSwipe = false }: PageNavProps) {
   // Klavye navigasyonu
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (jumpOpen) return; // dialog açıkken devre dışı
       if (e.key === "ArrowLeft") goTo(pageNumber + 1);
       if (e.key === "ArrowRight") goTo(pageNumber - 1);
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [pageNumber, goTo, jumpOpen]);
+  }, [pageNumber, goTo]);
 
   // Mobil swipe navigasyonu (sadece üst PageNav'da aktif — çift ateşlemeyi önlemek için)
   useSwipeNav({
@@ -44,46 +46,45 @@ export function PageNav({ pageNumber, enableSwipe = false }: PageNavProps) {
   });
 
   return (
-    <>
-      <div className="flex items-center justify-between px-4 py-2">
-        {/* Önceki sayfa */}
-        <button
-          onClick={() => goTo(pageNumber - 1)}
-          disabled={pageNumber <= 1}
-          className="p-2 rounded-lg hover:bg-[var(--color-surface)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          aria-label="Önceki sayfa"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 5L7 10L12 15" />
-          </svg>
-        </button>
+    <div className="flex items-center justify-between px-4 py-2">
+      {/* Önceki sayfa */}
+      <button
+        onClick={() => goTo(pageNumber - 1)}
+        disabled={pageNumber <= 1}
+        className="p-2 rounded-lg hover:bg-[var(--color-surface)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        aria-label="Önceki sayfa"
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 5L7 10L12 15" />
+        </svg>
+      </button>
 
-        {/* Sayfa numarası — tıklayınca atlama diyalogu */}
-        <button
-          onClick={() => setJumpOpen(true)}
-          className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors px-2 py-1 rounded-lg hover:bg-[var(--color-surface)]"
-        >
+      {/* Sure/Cüz seçici */}
+      {surahId ? (
+        <SurahPicker
+          currentSurahId={surahId}
+          mode="page"
+          currentPage={pageNumber}
+          totalPages={TOTAL_PAGES}
+          dropUp={dropUp}
+        />
+      ) : (
+        <span className="text-sm text-[var(--color-text-secondary)]">
           {pageNumber} / {TOTAL_PAGES}
-        </button>
+        </span>
+      )}
 
-        {/* Sonraki sayfa */}
-        <button
-          onClick={() => goTo(pageNumber + 1)}
-          disabled={pageNumber >= TOTAL_PAGES}
-          className="p-2 rounded-lg hover:bg-[var(--color-surface)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          aria-label="Sonraki sayfa"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M8 5L13 10L8 15" />
-          </svg>
-        </button>
-      </div>
-
-      <PageJumpDialog
-        open={jumpOpen}
-        onClose={() => setJumpOpen(false)}
-        currentPage={pageNumber}
-      />
-    </>
+      {/* Sonraki sayfa */}
+      <button
+        onClick={() => goTo(pageNumber + 1)}
+        disabled={pageNumber >= TOTAL_PAGES}
+        className="p-2 rounded-lg hover:bg-[var(--color-surface)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        aria-label="Sonraki sayfa"
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M8 5L13 10L8 15" />
+        </svg>
+      </button>
+    </div>
   );
 }

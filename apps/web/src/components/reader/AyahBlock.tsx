@@ -16,6 +16,10 @@ interface AyahBlockProps {
   textUthmani: string;
   textTajweed?: string;
   translation: string | null;
+  /** Çoklu meal: slug → text */
+  translations?: Record<string, string>;
+  /** Çoklu meal adları: slug → kısa ad */
+  translationNames?: Record<string, string>;
   showTranslation: boolean;
   showTajweed: boolean;
   pageNumber?: number;
@@ -29,6 +33,8 @@ export function AyahBlock({
   textUthmani,
   textTajweed,
   translation,
+  translations,
+  translationNames,
   showTranslation,
   showTajweed,
   pageNumber,
@@ -44,6 +50,8 @@ export function AyahBlock({
   const toggleBookmark = useBookmarksStore((s) => s.toggleBookmark);
   const arabicFontSize = useSettingsStore((s) => s.arabicFontSize);
   const translationFontSize = useSettingsStore((s) => s.translationFontSize);
+  const translationSlugs = useSettingsStore((s) => s.translationSlugs);
+  const multiMode = translationSlugs.length > 1;
   const wbwTranslation = useSettingsStore((s) => s.wbwTranslation);
   const wbwTranslit = useSettingsStore((s) => s.wbwTranslit);
 
@@ -208,8 +216,30 @@ export function AyahBlock({
         </div>
       )}
 
-      {/* Meal */}
-      {showTranslation && translation && (
+      {/* Meal — çoklu veya tekli */}
+      {showTranslation && translations && multiMode ? (
+        <div className="mt-2 space-y-1.5">
+          {translationSlugs.map((slug) => {
+            const text = translations[slug];
+            if (!text) return null;
+            return (
+              <div key={slug}>
+                <span
+                  className="inline-block text-[0.6rem] font-semibold text-[var(--color-text-secondary)] uppercase tracking-wide mb-0.5"
+                >
+                  {translationNames?.[slug] ?? slug}
+                </span>
+                <p
+                  className="text-[var(--color-text-translation)] leading-[1.7]"
+                  style={{ fontSize: `${translationFontSize}rem` }}
+                >
+                  {text}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      ) : showTranslation && translation ? (
         <p
           className="mt-2 text-[var(--color-text-translation)] leading-[1.7]"
           style={{ fontSize: `${translationFontSize}rem` }}
@@ -217,7 +247,7 @@ export function AyahBlock({
           <span className="text-[var(--color-text-secondary)] text-xs mr-1">{ayahNumber}.</span>
           {translation}
         </p>
-      )}
+      ) : null}
 
       {/* Eylem menüsü */}
       {surahId && (

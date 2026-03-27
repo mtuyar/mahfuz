@@ -12,6 +12,7 @@ import { useTranslation } from "~/hooks/useTranslation";
 import { useLocaleStore } from "~/stores/locale.store";
 import { getAllLocaleConfigs, type Locale } from "~/locales/registry";
 import { SearchableSelect } from "~/components/SearchableSelect";
+import { GroupedMultiSelect } from "~/components/GroupedMultiSelect";
 
 /** Dil kodu → görüntülenecek isim */
 const LANG_LABELS: Record<string, string> = {
@@ -42,7 +43,7 @@ export function SettingsPanel({ open, onClose, context }: SettingsPanelProps) {
     wbwTranslit, setWbwTranslit,
     showTajweed, toggleTajweed,
     readingMode, setReadingMode,
-    translationSlug, setTranslation,
+    translationSlugs, toggleTranslationSlug, moveTranslationSlug, setTranslation,
     arabicFontSize, setArabicFontSize,
     translationFontSize, setTranslationFontSize,
     reciterSlug, setReciter,
@@ -62,16 +63,25 @@ export function SettingsPanel({ open, onClose, context }: SettingsPanelProps) {
 
   const LANG_ORDER = ["tr", "en", "es", "fr", "ar", "de", "nl"];
 
+  const langOrder = useMemo(() => [locale, ...LANG_ORDER.filter((l) => l !== locale)], [locale]);
+
   const translationOptions = useMemo(() => {
     if (!translationList || translationList.length === 0) return [];
-    const order = [locale, ...LANG_ORDER.filter((l) => l !== locale)];
-    const langRank = (lang: string) => { const idx = order.indexOf(lang); return idx >= 0 ? idx : order.length; };
-    const sorted = [...translationList].sort((a, b) => langRank(a.language) - langRank(b.language));
-    return sorted.map((src) => {
+    return translationList.map((src) => {
       const lang = LANG_LABELS[src.language] || src.language;
-      return { value: src.slug, label: `${lang} / ${src.name}`, searchText: [lang, src.author, src.name].join(" ") };
+      return {
+        value: src.slug,
+        label: src.name,
+        group: lang,
+        searchText: [lang, src.author, src.name].join(" "),
+      };
     });
-  }, [translationList, locale]);
+  }, [translationList]);
+
+  const groupOrder = useMemo(
+    () => langOrder.map((l) => LANG_LABELS[l] || l),
+    [langOrder],
+  );
 
   const reciterOptions = useMemo(() => {
     if (!reciterList || reciterList.length === 0) return [];
@@ -87,11 +97,15 @@ export function SettingsPanel({ open, onClose, context }: SettingsPanelProps) {
     if (prevLocaleRef.current === locale) return;
     prevLocaleRef.current = locale;
     if (!translationList || translationList.length === 0) return;
-    const current = translationList.find((s) => s.slug === translationSlug);
-    if (current?.language === locale) return;
+    // Eğer seçili mealler zaten yeni locale'i içeriyorsa değiştirme
+    const hasLocaleMatch = translationSlugs.some((slug) => {
+      const src = translationList.find((s) => s.slug === slug);
+      return src?.language === locale;
+    });
+    if (hasLocaleMatch) return;
     const match = translationList.find((s) => s.language === locale);
     if (match) setTranslation(match.slug);
-  }, [locale, translationList, translationSlug, setTranslation]);
+  }, [locale, translationList, translationSlugs, setTranslation]);
 
   if (!open) return null;
 
@@ -186,14 +200,68 @@ export function SettingsPanel({ open, onClose, context }: SettingsPanelProps) {
             </div>
             {showTranslation && (
               <>
-                <SearchableSelect
+                <GroupedMultiSelect
                   options={translationOptions}
-                  value={translationSlug}
-                  onChange={setTranslation}
+                  values={translationSlugs}
+                  onChange={toggleTranslationSlug}
                   placeholder={t.settings.select}
                   searchPlaceholder={t.settings.searchTranslation}
                   noResultsText={t.common.noResults}
+                  groupOrder={groupOrder}
                 />
+                {/* Seçili meallerin sıralama listesi */}
+                {translationSlugs.length > 1 && (
+                  <div className="mt-2 space-y-0.5">
+                    {translationSlugs.map((slug, i) => {
+                      const opt = translationOptions.find((o) => o.value === slug);
+                      return (
+                        <div
+                          key={slug}
+                          className="flex items-center gap-1.5 rounded-lg bg-[var(--color-bg)] px-2 py-1"
+                        >
+                          <span className="text-[0.65rem] font-bold text-[var(--color-accent)] w-4 text-center shrink-0">
+                            {i + 1}
+                          </span>
+                          <span className="flex-1 text-xs truncate">
+                            {opt ? `${opt.group} / ${opt.label}` : slug}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => moveTranslationSlug(slug, "up")}
+                            disabled={i === 0}
+                            className="p-0.5 rounded hover:bg-[var(--color-border)] disabled:opacity-20 transition-colors"
+                            aria-label="Yukarı taşı"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                              <path d="M3 7.5L6 4.5L9 7.5" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveTranslationSlug(slug, "down")}
+                            disabled={i === translationSlugs.length - 1}
+                            className="p-0.5 rounded hover:bg-[var(--color-border)] disabled:opacity-20 transition-colors"
+                            aria-label="Aşağı taşı"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                              <path d="M3 4.5L6 7.5L9 4.5" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => toggleTranslationSlug(slug)}
+                            className="p-0.5 rounded hover:bg-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-red-500 transition-colors"
+                            aria-label="Kaldır"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                              <path d="M3 3L9 9M9 3L3 9" />
+                            </svg>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
                 <div className="flex items-center justify-between mt-2">
                   <label className="text-[11px] text-[var(--color-text-secondary)]">
                     {t.settings.wordByWord}

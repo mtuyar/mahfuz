@@ -18,14 +18,15 @@ export const quranKeys = {
   all: ["quran"] as const,
   surahs: () => [...quranKeys.all, "surahs"] as const,
   surah: (id: number) => [...quranKeys.all, "surah", id] as const,
-  page: (pageNumber: number, slug: string) =>
-    [...quranKeys.all, "page", pageNumber, slug] as const,
-  surahData: (surahId: number, slug: string) =>
-    [...quranKeys.all, "surahData", surahId, slug] as const,
+  page: (pageNumber: number, slugs: string[]) =>
+    [...quranKeys.all, "page", pageNumber, slugs.join(",")] as const,
+  surahData: (surahId: number, slugs: string[]) =>
+    [...quranKeys.all, "surahData", surahId, slugs.join(",")] as const,
   translationSources: () => [...quranKeys.all, "translationSources"] as const,
   reciters: () => [...quranKeys.all, "reciters"] as const,
   tajweed: (surahId: number) => [...quranKeys.all, "tajweed", surahId] as const,
   imlaei: (surahId: number) => [...quranKeys.all, "imlaei", surahId] as const,
+  mushafLines: (pageNumber: number) => [...quranKeys.all, "mushafLines", pageNumber] as const,
 };
 
 // ── Query Options ────────────────────────────────────────
@@ -44,17 +45,17 @@ export const surahQueryOptions = (surahId: number) =>
     staleTime: Infinity,
   });
 
-export const pageDataQueryOptions = (pageNumber: number, translationSlug = "omer-celik") =>
+export const pageDataQueryOptions = (pageNumber: number, translationSlugs: string[] = ["omer-celik"]) =>
   queryOptions({
-    queryKey: quranKeys.page(pageNumber, translationSlug),
-    queryFn: () => getPageData({ data: { pageNumber, translationSlug } }),
+    queryKey: quranKeys.page(pageNumber, translationSlugs),
+    queryFn: () => getPageData({ data: { pageNumber, translationSlugs } }),
     staleTime: Infinity,
   });
 
-export const surahDataQueryOptions = (surahId: number, translationSlug = "omer-celik") =>
+export const surahDataQueryOptions = (surahId: number, translationSlugs: string[] = ["omer-celik"]) =>
   queryOptions({
-    queryKey: quranKeys.surahData(surahId, translationSlug),
-    queryFn: () => getSurahData({ data: { surahId, translationSlug } }),
+    queryKey: quranKeys.surahData(surahId, translationSlugs),
+    queryFn: () => getSurahData({ data: { surahId, translationSlugs } }),
     staleTime: Infinity,
   });
 
@@ -94,6 +95,28 @@ export const imlaeiQueryOptions = (surahId: number) =>
     staleTime: Infinity,
   });
 
+export interface MushafLineWord {
+  /** text_uthmani */
+  t: string;
+  /** char_type: w=word, e=end, p=pause */
+  c: "w" | "e" | "p";
+}
+
+export interface MushafPageLines {
+  lines: { words: MushafLineWord[] }[];
+}
+
+export const mushafLinesQueryOptions = (pageNumber: number) =>
+  queryOptions({
+    queryKey: quranKeys.mushafLines(pageNumber),
+    queryFn: async (): Promise<MushafPageLines> => {
+      const res = await fetch(`/mushaf-lines/${pageNumber}.json`);
+      if (!res.ok) throw new Error(`Mushaf line data not found for page ${pageNumber}`);
+      return res.json();
+    },
+    staleTime: Infinity,
+  });
+
 // ── Suspense Hooks ───────────────────────────────────────
 
 export function useSurahs() {
@@ -104,12 +127,12 @@ export function useSurah(surahId: number) {
   return useSuspenseQuery(surahQueryOptions(surahId));
 }
 
-export function usePageData(pageNumber: number, translationSlug = "omer-celik") {
-  return useSuspenseQuery(pageDataQueryOptions(pageNumber, translationSlug));
+export function usePageData(pageNumber: number, translationSlugs: string[] = ["omer-celik"]) {
+  return useSuspenseQuery(pageDataQueryOptions(pageNumber, translationSlugs));
 }
 
-export function useSurahData(surahId: number, translationSlug = "omer-celik") {
-  return useSuspenseQuery(surahDataQueryOptions(surahId, translationSlug));
+export function useSurahData(surahId: number, translationSlugs: string[] = ["omer-celik"]) {
+  return useSuspenseQuery(surahDataQueryOptions(surahId, translationSlugs));
 }
 
 export function useReciters() {
@@ -130,5 +153,13 @@ export function useImlaei(surahId: number, enabled: boolean) {
     ...imlaeiQueryOptions(surahId),
     enabled,
     placeholderData: (prev) => prev,
+  });
+}
+
+/** Mushaf satır verisi — sayfa bazlı kelime + satır numarası */
+export function useMushafLines(pageNumber: number, enabled: boolean) {
+  return useQuery({
+    ...mushafLinesQueryOptions(pageNumber),
+    enabled,
   });
 }

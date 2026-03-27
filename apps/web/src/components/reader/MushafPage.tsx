@@ -1,16 +1,18 @@
 /**
  * Mushaf sayfası — fiziksel Kur'an sayfası gibi akan metin.
- * Ayetler bitişik akıyor, ayet numaraları inline badge olarak gösteriliyor.
+ * Satır verisi mevcutsa gerçek Mushaf satır düzeni kullanılır.
  */
 
 import { useSettingsStore } from "~/stores/settings.store";
 import { useReadingStore } from "~/stores/reading.store";
 import { useBookmarksStore } from "~/stores/bookmarks.store";
 import { useAudioStore } from "~/stores/audio.store";
-import { usePageData, useTajweed, useImlaei } from "~/hooks/useQuranQuery";
+import { usePageData, useTajweed, useImlaei, useMushafLines, translationSourcesQueryOptions } from "~/hooks/useQuranQuery";
+import { useQuery } from "@tanstack/react-query";
 import { cleanImlaei } from "~/lib/strip-diacritics";
 import { parseTajweed } from "~/lib/tajweed-parser";
 import { SurahHeader } from "./SurahHeader";
+import { MushafLineView } from "./MushafLineView";
 import { PageNav } from "./PageNav";
 import { useReadingTracker } from "~/hooks/useReadingTracker";
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
@@ -24,12 +26,15 @@ interface MushafPageProps {
 }
 
 export function MushafPage({ pageNumber, highlightAyah }: MushafPageProps) {
-  const { showTranslation, showTajweed, translationSlug, arabicFontSize, textStyle } = useSettingsStore();
+  const { showTranslation, showTajweed, translationSlugs, arabicFontSize, textStyle } = useSettingsStore();
   const { t } = useTranslation();
   const useBasic = textStyle === "basic";
   const effectiveTajweed = showTajweed && !useBasic;
   const savePosition = useReadingStore((s) => s.savePosition);
-  const { data: pageData } = usePageData(pageNumber, translationSlug);
+  const { data: pageData } = usePageData(pageNumber, translationSlugs);
+
+  // Mushaf satır verisi (gerçek satır düzeni)
+  const { data: lineData } = useMushafLines(pageNumber, true);
 
   // Sayfadaki benzersiz sure ID'leri
   const surahIds = useMemo(
@@ -65,6 +70,16 @@ export function MushafPage({ pageNumber, highlightAyah }: MushafPageProps) {
     return map;
   }, [im0.data, im1.data, im2.data]);
 
+  // Çoklu meal adları: slug → kısa ad
+  const { data: translationSourceList } = useQuery({ ...translationSourcesQueryOptions(), enabled: translationSlugs.length > 1 });
+  const translationNames = useMemo(() => {
+    const map: Record<string, string> = {};
+    if (translationSourceList) {
+      for (const s of translationSourceList) map[s.slug] = s.name;
+    }
+    return map;
+  }, [translationSourceList]);
+
   useReadingTracker(pageNumber);
 
   useEffect(() => {
@@ -88,63 +103,86 @@ export function MushafPage({ pageNumber, highlightAyah }: MushafPageProps) {
 
   return (
     <div className="max-w-3xl mx-auto px-4">
-      <PageNav pageNumber={pageNumber} enableSwipe />
+      <PageNav pageNumber={pageNumber} enableSwipe surahId={surahIds[0]} />
 
       {/* Cüz bilgisi */}
       <div className="text-center text-xs text-[var(--color-text-secondary)] py-1">
         {pageData.juzNumber}. {t.common.juz}
       </div>
 
-      {/* Mushaf akan metin */}
+      {/* Mushaf metin */}
       <div className="pb-8">
-        {pageData.surahGroups.map((group) => (
-          <div key={group.surah.id}>
-            {group.isStart && (
-              <SurahHeader
-                surahId={group.surah.id}
-                nameArabic={group.surah.nameArabic}
-                nameSimple={group.surah.nameSimple}
-                showBismillah={group.surah.bismillahPre}
-              />
+        {lineData ? (
+          <>
+            {/* Gerçek Mushaf satır düzeni */}
+            {pageData.surahGroups.map((group) =>
+              group.isStart ? (
+                <SurahHeader
+                  key={`sh-${group.surah.id}`}
+                  surahId={group.surah.id}
+                  nameArabic={group.surah.nameArabic}
+                  nameSimple={group.surah.nameSimple}
+                  showBismillah={false}
+                />
+              ) : null,
             )}
+            <MushafLineView lineData={lineData} arabicFontSize={arabicFontSize} />
+            {/* Meal bloğu */}
+            {showTranslation &&
+              pageData.surahGroups.map((group) => (
+                <MushafTranslations key={`tr-${group.surah.id}`} ayahs={group.ayahs} translationNames={translationNames} />
+              ))}
+          </>
+        ) : (
+          /* Fallback: akan metin (satır verisi yüklenemezse) */
+          pageData.surahGroups.map((group) => (
+            <div key={group.surah.id}>
+              {group.isStart && (
+                <SurahHeader
+                  surahId={group.surah.id}
+                  nameArabic={group.surah.nameArabic}
+                  nameSimple={group.surah.nameSimple}
+                  showBismillah={group.surah.bismillahPre}
+                />
+              )}
 
-            {/* Akan Arapça metin bloğu */}
-            <div
-              className="leading-[2.8] py-2"
-              dir="rtl"
-              style={{
-                fontFamily: "var(--font-arabic)",
-                fontSize: `${arabicFontSize}rem`,
-                textAlign: "justify",
-                textAlignLast: "center",
-              }}
-            >
-              {group.ayahs.map((ayah) => {
-                const vk = `${ayah.surahId}:${ayah.ayahNumber}`;
-                return (
-                  <MushafVerse
-                    key={vk}
-                    surahId={ayah.surahId}
-                    ayahNumber={ayah.ayahNumber}
-                    textUthmani={useBasic ? cleanImlaei(imlaeiMap[vk] ?? ayah.textUthmani) : ayah.textUthmani}
-                    textTajweed={effectiveTajweed ? tajweedMap[vk] : undefined}
-                    translation={ayah.translation}
-                    pageNumber={pageNumber}
-                    highlight={highlightAyah === vk}
-                  />
-                );
-              })}
+              {/* Akan Arapça metin bloğu */}
+              <div
+                className="leading-[2.8] py-2"
+                dir="rtl"
+                style={{
+                  fontFamily: "var(--font-arabic)",
+                  fontSize: `${arabicFontSize}rem`,
+                  textAlign: "justify",
+                  textAlignLast: "center",
+                }}
+              >
+                {group.ayahs.map((ayah) => {
+                  const vk = `${ayah.surahId}:${ayah.ayahNumber}`;
+                  return (
+                    <MushafVerse
+                      key={vk}
+                      surahId={ayah.surahId}
+                      ayahNumber={ayah.ayahNumber}
+                      textUthmani={useBasic ? cleanImlaei(imlaeiMap[vk] ?? ayah.textUthmani) : ayah.textUthmani}
+                      textTajweed={effectiveTajweed ? tajweedMap[vk] : undefined}
+                      translation={ayah.translation}
+                      pageNumber={pageNumber}
+                      highlight={highlightAyah === vk}
+                    />
+                  );
+                })}
+              </div>
+
+              {showTranslation && (
+                <MushafTranslations ayahs={group.ayahs} translationNames={translationNames} />
+              )}
             </div>
-
-            {/* Meal bloğu — akan metnin altında, ayet ayet */}
-            {showTranslation && (
-              <MushafTranslations ayahs={group.ayahs} />
-            )}
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
-      <PageNav pageNumber={pageNumber} />
+      <PageNav pageNumber={pageNumber} surahId={surahIds[0]} dropUp />
     </div>
   );
 }
@@ -268,28 +306,72 @@ function MushafVerse({ surahId, ayahNumber, textUthmani, textTajweed, translatio
 
 // ── Meal listesi (akan metnin altında) ──────────────────
 
-function MushafTranslations({ ayahs }: {
-  ayahs: Array<{ surahId: number; ayahNumber: number; translation: string | null }>;
+function MushafTranslations({ ayahs, translationNames }: {
+  ayahs: Array<{ surahId: number; ayahNumber: number; translations: Record<string, string> }>;
+  translationNames: Record<string, string>;
 }) {
   const translationFontSize = useSettingsStore((s) => s.translationFontSize);
+  const translationSlugs = useSettingsStore((s) => s.translationSlugs);
+  const multiMode = translationSlugs.length > 1;
 
-  const withTranslation = ayahs.filter((a) => a.translation);
+  const withTranslation = ayahs.filter((a) => Object.keys(a.translations).length > 0);
   if (withTranslation.length === 0) return null;
 
+  // Tekli meal — eskisi gibi düz liste
+  if (!multiMode) {
+    const slug = translationSlugs[0];
+    return (
+      <div className="mt-4 pt-4 border-t border-[var(--color-border)] space-y-2">
+        {withTranslation.map((ayah) => {
+          const text = ayah.translations[slug];
+          if (!text) return null;
+          return (
+            <p
+              key={`${ayah.surahId}:${ayah.ayahNumber}`}
+              className="text-[var(--color-text-translation)] leading-[1.7]"
+              style={{ fontSize: `${translationFontSize}rem` }}
+            >
+              <span className="text-[var(--color-text-secondary)] text-xs mr-1 font-medium">
+                {ayah.ayahNumber}.
+              </span>
+              {text}
+            </p>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Çoklu meal — kaynak bazlı gruplama
   return (
-    <div className="mt-4 pt-4 border-t border-[var(--color-border)] space-y-2">
-      {withTranslation.map((ayah) => (
-        <p
-          key={`${ayah.surahId}:${ayah.ayahNumber}:tr`}
-          className="text-[var(--color-text-translation)] leading-[1.7]"
-          style={{ fontSize: `${translationFontSize}rem` }}
-        >
-          <span className="text-[var(--color-text-secondary)] text-xs mr-1 font-medium">
-            {ayah.ayahNumber}.
-          </span>
-          {ayah.translation}
-        </p>
-      ))}
+    <div className="mt-4 pt-4 border-t border-[var(--color-border)] space-y-4">
+      {translationSlugs.map((slug) => {
+        const verses = withTranslation
+          .map((a) => ({ ...a, text: a.translations[slug] }))
+          .filter((a) => a.text);
+        if (verses.length === 0) return null;
+        return (
+          <div key={slug}>
+            <p className="text-[0.7rem] font-semibold text-[var(--color-text-secondary)] mb-1.5 uppercase tracking-wide">
+              {translationNames[slug] ?? slug}
+            </p>
+            <div className="space-y-1">
+              {verses.map((ayah) => (
+                <p
+                  key={`${ayah.surahId}:${ayah.ayahNumber}:${slug}`}
+                  className="text-[var(--color-text-translation)] leading-[1.7]"
+                  style={{ fontSize: `${translationFontSize}rem` }}
+                >
+                  <span className="text-[var(--color-text-secondary)] text-xs mr-1 font-medium">
+                    {ayah.ayahNumber}.
+                  </span>
+                  {ayah.text}
+                </p>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
